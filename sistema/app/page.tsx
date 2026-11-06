@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LOGO_DATA_URI, LOGO_ICON_DATA_URI, LOGIN_BG_DATA_URI } from "../lib/logo";
+import { LOGO_DATA_URI, LOGIN_BG_DATA_URI } from "../lib/logo";
 
 const VERDE = "#46d17c";
 
@@ -114,14 +114,6 @@ export default function Login() {
     <div className="login-hero" style={{ backgroundImage: `url(${LOGIN_BG_DATA_URI})` }}>
       <div className="login-hero-grade">
         <aside className="login-hero-painel">
-          <div className="login-hero-marca">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO_ICON_DATA_URI} alt="" />
-            <span className="login-hero-marca-texto">
-              Condo<span>Free</span>
-              <sup>®</sup>
-            </span>
-          </div>
           <h1>
             Gestão completa para o seu{" "}
             <span className="login-sublinhado">
