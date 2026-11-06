@@ -296,3 +296,77 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
   .sidebar .side-rodape .selo { text-align: center; }
   .painel-layout .container { flex: 1; min-width: 0; }
 }
+
+/* ---- Login novo layout (foto + painel + cartão) ---- */
+.login-hero {
+  min-height: 100vh;
+  min-height: 100svh;
+  background-size: cover;
+  background-position: center;
+  background-color: #0b2a4a;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  overflow: hidden;
+}
+.login-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(5, 22, 40, 0.72) 0%, rgba(5, 22, 40, 0.45) 55%, rgba(5, 22, 40, 0.35) 100%);
+  z-index: 0;
+}
+.login-hero-grade {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(360px, 540px) minmax(380px, 470px);
+  gap: 56px;
+  width: 100%;
+  max-width: 1120px;
+  align-items: center;
+}
+.login-hero-painel {
+  background: rgba(7, 30, 54, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 28px;
+  padding: 40px 38px;
+  color: #fff;
+}
+.login-hero-marca { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.login-hero-marca img { height: 58px; width: auto; }
+.login-hero-marca-texto { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; color: #fff; line-height: 1; }
+.login-hero-marca-texto span { color: #46d17c; }
+.login-hero-marca-texto sup { font-size: 12px; font-weight: 400; margin-left: 2px; }
+.login-hero-painel h1 { font-size: 44px; line-height: 1.12; margin: 0; font-weight: 800; letter-spacing: -0.5px; }
+.login-sublinhado { position: relative; color: #46d17c; white-space: nowrap; }
+.login-sublinhado svg { position: absolute; left: 0; bottom: -10px; width: 100%; height: 12px; }
+.login-hero-lista { list-style: none; margin: 34px 0 0; padding: 0; display: grid; gap: 15px; }
+.login-hero-lista li { display: flex; align-items: center; gap: 13px; font-size: 18px; font-weight: 600; }
+.login-hero-lista li svg { flex-shrink: 0; color: #46d17c; }
+.login-hero-cartao { background: #fff; border-radius: 28px; padding: 32px 30px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
+.login-hero-cartao-logo { text-align: center; margin-bottom: 6px; }
+.login-hero-cartao-logo img { height: 58px; width: auto; max-width: 100%; object-fit: contain; }
+.login-hero-cartao h2 { text-align: center; color: var(--navy); font-size: 26px; margin: 6px 0 4px; }
+.login-hero-sub { text-align: center; color: var(--muted); margin: 0 0 18px; font-size: 15px; }
+.login-input-icone { position: relative; }
+.login-input-icone > svg.icone-campo { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #6b7b8d; pointer-events: none; }
+.login-input-icone input { padding-left: 44px !important; }
+.login-hero-preco { text-align: center; color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+.login-hero-teste { background: #eef4fa; border-radius: 16px; padding: 16px; margin-top: 18px; font-size: 14px; text-align: center; }
+.login-hero-teste p { margin: 4px 0; }
+.login-hero-teste .btn { margin-top: 10px; }
+.login-hero-onda { position: absolute; right: 0; bottom: 0; width: 430px; height: 170px; z-index: 1; pointer-events: none; }
+@media (max-width: 900px) {
+  .login-hero-grade { grid-template-columns: 1fr; gap: 18px; max-width: 520px; }
+  .login-hero-painel { padding: 28px 24px; }
+  .login-hero-painel h1 { font-size: 31px; }
+  .login-hero-lista { gap: 11px; margin-top: 24px; }
+  .login-hero-lista li { font-size: 16px; }
+  .login-hero-cartao { padding: 26px 20px; }
+  .login-hero-onda { display: none; }
+  .login-hero { padding: 20px 14px; align-items: flex-start; }
+}
