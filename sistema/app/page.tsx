@@ -98,18 +98,6 @@ export default function Login() {
     }
   }
 
-  async function criarDemo() {
-    setErro("");
-    const res = await fetch("/api/seed", { method: "POST" });
-    const d = await res.json();
-    if (!d.ok) {
-      setErro(d.erro || "Não foi possível criar a demonstração.");
-      return;
-    }
-    setForm({ ...form, email: "sindico@exemplo.com", senha: "exemplo123" });
-    setOk("Demonstração criada! Entre com síndico@exemplo.com / exemplo123.");
-  }
-
   return (
     <div className="login-hero" style={{ backgroundImage: `url(${LOGIN_BG_DATA_URI})` }}>
       <div className="login-hero-grade">
@@ -212,14 +200,6 @@ export default function Login() {
             14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês.
           </p>
 
-          <div className="login-hero-teste">
-            <strong>🖥️ Conta de teste</strong>
-            <p style={{ margin: "4px 0" }}>Síndico: sindico@exemplo.com · senha exemplo123</p>
-            <p style={{ margin: "4px 0" }}>Morador: morador@exemplo.com · senha exemplo123</p>
-            <button className="btn secundario pequeno" type="button" onClick={criarDemo}>
-              Criar dados de demonstração
-            </button>
-          </div>
         </div>
       </div>
 
