@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LOGO_DATA_URI } from "@/lib/logo";
 
 type Aba = "entrar" | "sindico" | "morador";
 
@@ -104,7 +105,7 @@ export default function Login() {
     <div className="login-wrap">
       <div className="logo-grande">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="CondoFree" />
+        <img src={LOGO_DATA_URI} alt="CondoFree" />
         <h1 style={{ color: "#0b2a4a", margin: "8px 0 0" }}>Acesse o seu condomínio</h1>
         <p style={{ color: "#5b6b7d", marginTop: 4 }}>
           Sem e-mail de confirmação: sua conta já nasce ativa. Cadastre-se na aba ao lado e entre com o mesmo e-mail e senha.
