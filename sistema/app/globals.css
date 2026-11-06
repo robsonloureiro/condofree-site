@@ -249,7 +249,7 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
 @media print {
   @page { margin: 15mm; }
   body { background: #fff !important; }
-  .topo, .menu-grade, .barra-inferior, .gaveta, .gaveta-fundo { display: none !important; }
+  .topo, .menu-grade, .barra-inferior, .gaveta, .gaveta-fundo, .sidebar { display: none !important; }
   .tela-only { display: none !important; }
   .impressao-only { display: block !important; }
   .container { max-width: 100% !important; padding: 0 !important; }
@@ -267,4 +267,32 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
   .doc-tabela tr { break-inside: avoid; }
   .doc-obs { font-size: 13px; color: #b45309; }
   .doc-rodape { margin-top: 18px; padding-top: 10px; border-top: 1px solid #dde5ee; font-size: 12px; color: #5b6b7d; }
+}
+
+.painel-layout { display: block; }
+.sidebar { display: none; }
+@media (min-width: 561px) {
+  .topo { display: none; }
+  .painel-layout { display: flex; align-items: flex-start; }
+  .sidebar {
+    display: flex; flex-direction: column; gap: 4px;
+    position: sticky; top: 0; align-self: flex-start;
+    width: 264px; flex-shrink: 0; height: 100vh; overflow-y: auto;
+    background: #fff; border-right: 1px solid var(--border); padding: 20px 14px;
+  }
+  .sidebar img.logo { height: 38px; width: auto; margin-bottom: 4px; }
+  .sidebar .side-condominio { font-weight: 800; font-size: 17px; color: var(--navy); }
+  .sidebar .side-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .sidebar .side-nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar .side-nav button {
+    display: flex; align-items: center; gap: 10px;
+    background: none; border: 0; border-radius: 10px;
+    padding: 11px 12px; font-size: 15px; font-weight: 700; color: var(--navy); text-align: left;
+  }
+  .sidebar .side-nav button span.icone { font-size: 20px; }
+  .sidebar .side-nav button.ativo { background: #eafaf1; }
+  .sidebar .side-nav button:hover { background: #f2f5f8; }
+  .sidebar .side-rodape { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .sidebar .side-rodape .selo { text-align: center; }
+  .painel-layout .container { flex: 1; min-width: 0; }
 }

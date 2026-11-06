@@ -141,16 +141,27 @@ export default function Painel() {
         ))}
       </nav>
 
-      <div className="container">
-        <div className="menu-grade">
-          {modulosVisiveis.map((m) => (
-            <button key={m.id} className={aba === m.id ? "ativo" : ""} onClick={() => irPara(m.id)}>
-              <span className="icone">{m.icone}</span>
-              {m.rotulo}
-            </button>
-          ))}
-        </div>
-
+      <div className="painel-layout">
+        <aside className="sidebar">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="logo" src={LOGO_DATA_URI} alt="CondoFree" />
+          <div className="side-condominio">{estado.condominio.nome}</div>
+          <div className="side-sub">Síndico: {ehSindico ? usuario.nome : "Síndico do condomínio"}</div>
+          <nav className="side-nav">
+            {modulosVisiveis.map((m) => (
+              <button key={m.id} className={aba === m.id ? "ativo" : ""} onClick={() => irPara(m.id)}>
+                <span className="icone">{m.icone}</span>
+                {m.rotulo}
+              </button>
+            ))}
+          </nav>
+          <div className="side-rodape">
+            <span className="selo">{estado.statusAssinatura.texto}</span>
+            <button className="btn pequeno" onClick={() => irPara("ajuda")}>Ajuda / Suporte</button>
+            <button className="btn secundario pequeno" onClick={sair}>Sair</button>
+          </div>
+        </aside>
+        <div className="container">
         {erro && <div className="erro">{erro}</div>}
         {ok && <div className="ok-msg">{ok}</div>}
 
@@ -166,7 +177,7 @@ export default function Painel() {
             </div>
             <div className="cartao">
               <h2>Bem-vindo ao CondoFree</h2>
-              <p>Mais controle, zero burocracia. Use o menu acima para reservar espaços, ler avisos, abrir ocorrências, ver boletos e votar.</p>
+              <p>Mais controle, zero burocracia. Use o menu para reservar espaços, ler avisos, abrir ocorrências, ver boletos e votar.</p>
               <p style={{ color: "#5b6b7d" }}>Código de convite do condomínio: <strong>{estado.condominio.codigoConvite}</strong> — passe aos moradores para eles criarem a conta.</p>
             </div>
             {estado.avisos.slice(0, 3).map((a: any) => (
@@ -209,6 +220,7 @@ export default function Painel() {
         {aba === "ajuda" && (
           <AjudaTab ehSindico={ehSindico} abrirSuporte={abrirSuporte} />
         )}
+        </div>
       </div>
 
       <nav className="barra-inferior">
@@ -988,10 +1000,6 @@ function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuport
     <div>
       <div className="cartao">
         <h2>❓ Ajuda / Suporte</h2>
-        <p>Precisa de ajuda? Fale com a gente no WhatsApp: <strong>(21) 99151-2329</strong></p>
-        <p style={{ color: "#5b6b7d" }}>Sua mensagem vai para o nosso WhatsApp e respondemos por lá.</p>
-      </div>
-      <div className="cartao">
         <h3>Como funciona — passo a passo</h3>
         {ehSindico ? (
           <ol>
@@ -1012,8 +1020,6 @@ function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuport
         )}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="btn" onClick={() => abrirSuporte("Tenho uma dúvida sobre o CondoFree.")}>Falar no WhatsApp</button>
-          <button className="btn secundario" onClick={() => abrirSuporte("Quanto custa o CondoFree?")}>Quanto custa?</button>
-          <button className="btn secundario" onClick={() => abrirSuporte("Como funciona o teste grátis?")}>Como funciona o teste grátis?</button>
         </div>
       </div>
     </div>
