@@ -134,7 +134,7 @@ header .container{width:min(1400px,calc(100% - 56px))}
 .fit h3{font-size:19px;margin-bottom:16px} .fit ul{list-style:none;padding:0;margin:0} .fit li{padding:8px 0;font-size:16px;display:flex;gap:10px;line-height:1.55} 
 
 /* PRICING */
-.price-wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start}@media(max-width:860px){.price-wrap{grid-template-columns:1fr}}
+.price-wrap{display:block;max-width:780px;margin:0 auto}
 .price-card{background:var(--surface);border:3px solid var(--brand);border-radius:32px;padding:38px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 @media(max-width:560px){.price-card{padding:28px 22px}}
 .price-card::before{content:"MAIS PROCURADO";position:absolute;top:20px;right:-36px;transform:rotate(35deg);background:var(--accent);color:var(--accent-ink);font-size:11.5px;font-weight:800;letter-spacing:.08em;padding:7px 42px}
@@ -481,13 +481,6 @@ body.chat-open .wa-float{opacity:0;pointer-events:none;visibility:hidden}
         <p style="color:var(--muted);font-size:15px">Nos 6 primeiros meses você paga só R$ 9,90/mês. A partir do 7º mês, volta ao preço normal de <b style="color:var(--ink)">R$ 97/mês</b>. <b style="color:var(--ink)">14 dias grátis</b> para todos, sem cartão para testar.</p>
         <ul class="price-includes"><li>Reserva de salão e churrasqueira</li><li>Mural de avisos ilimitado</li><li>Ocorrências com foto</li><li>2ª via de boleto</li><li>Votações ilimitadas</li><li>Link para todos os moradores</li><li>Suporte em português</li><li>Sem taxa de implantação</li></ul>
         <a href="#comecar" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px">Criar conta grátis — 14 dias grátis</a>
-        <div class="cancel-banner" role="note"><span class="cb-icon" aria-hidden="true">↩</span><div><b>Cancele a qualquer momento</b><p>Sem fidelidade, sem multa e sem burocracia. Você cancela quando quiser, direto no painel — sem precisar ligar, sem letra miúda e sem taxa de saída. Simples assim.</p></div></div>
-        <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:12px">Preço por condomínio, não por apartamento. Você só continua se estiver valendo a pena.</p>
-        <div class="cancel-strip"><span><i>✓</i> Sem fidelidade</span><span><i>✓</i> Sem multa de cancelamento</span><span><i>✓</i> Cancele a qualquer momento</span></div>
-      </div>
-      <div>
-        <div class="guarantee"><h3>💡 Quanto isso dá por apartamento?</h3><p>Num condomínio de 50 unidades, a promoção de R$ 9,90/mês é <b style="color:var(--ink)">R$ 0,20 por apartamento/mês</b> nos 6 primeiros meses. No preço normal de R$ 97/mês, são R$ 1,94 por apartamento. Menos que o custo de imprimir avisos e boletos no papel.</p></div>
-        <div class="guarantee" style="margin-top:16px"><h3>🛡️ Teste sem risco</h3><p><b style="color:var(--ink)">14 dias grátis</b>, com tudo liberado. Se os moradores não usarem, você não paga nada e não fica preso a contrato.</p></div>
       </div>
     </div>
   </div>
