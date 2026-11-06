@@ -496,6 +496,9 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
   const entradas = lancamentos.filter((l: any) => l.tipo === "receita" && l.pago).reduce((s: number, l: any) => s + l.valor, 0);
   const saidas = lancamentos.filter((l: any) => l.tipo === "despesa" && l.pago).reduce((s: number, l: any) => s + l.valor, 0);
   const pendentes = lancamentos.filter((l: any) => !l.pago);
+  const MESES_LONGOS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  const nomeMesLongo = (m: string) => { const [y, mm] = m.split("-"); return `${MESES_LONGOS[Number(mm) - 1] || ""} de ${y}`; };
+  const ROTULO_CATEGORIA: Record<string, string> = { limpeza: "Limpeza", manutencao: "Manutenção", energia: "Energia", agua: "Água", seguranca: "Segurança", boleto: "Boleto", taxa_extra: "Taxa extra", aluguel_salao: "Aluguel do salão", multa: "Multa", "Folha de pagamento": "Folha de pagamento", outros: "Outros" };
   function baixarPrestacao() {
     const linhas = [
       `PRESTAÇÃO DE CONTAS — ${estado.condominio.nome}`,
@@ -533,7 +536,8 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
     );
   }
   return (
-    <div>
+    <>
+    <div className="tela-only">
       <div className="cartao">
         <h2>💰 Financeiro — contabilidade simples</h2>
         <p>O CondoFree não recebe o valor do boleto. O dinheiro é do condomínio.</p>
@@ -619,6 +623,39 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
         {pendentes.length > 0 && <p style={{ color: "#b45309" }}>{pendentes.length} lançamento(s) pendente(s) neste mês.</p>}
       </div>
     </div>
+    <div className="impressao-only">
+      <div className="doc-cabecalho">
+        <img src={LOGO_DATA_URI} alt="CondoFree" className="doc-logo" />
+        <div>
+          <div className="doc-titulo">Prestação de contas</div>
+          <div className="doc-sub">{estado.condominio.nome} · {nomeMesLongo(mes)}</div>
+        </div>
+      </div>
+      <div className="doc-resumo">
+        <div><span>Entradas pagas</span><strong>{brl(entradas)}</strong></div>
+        <div><span>Saídas pagas</span><strong>{brl(saidas)}</strong></div>
+        <div><span>Saldo do mês</span><strong>{brl(entradas - saidas)}</strong></div>
+      </div>
+      <table className="doc-tabela">
+        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th>Status</th></tr></thead>
+        <tbody>
+          {lancamentos.map((l: any) => (
+            <tr key={l.id}>
+              <td>{dataBR(l.data)}</td>
+              <td>{l.descricao}</td>
+              <td>{ROTULO_CATEGORIA[l.categoria] || l.categoria}</td>
+              <td>{l.tipo === "receita" ? "Entrada" : "Saída"}</td>
+              <td>{brl(l.valor)}</td>
+              <td>{l.pago ? "Pago" : "Pendente"}</td>
+            </tr>
+          ))}
+          {lancamentos.length === 0 && (<tr><td colSpan={6}>Nenhum lançamento neste mês.</td></tr>)}
+        </tbody>
+      </table>
+      {pendentes.length > 0 && <p className="doc-obs">{pendentes.length} lançamento(s) pendente(s) neste mês.</p>}
+      <p className="doc-rodape">Documento gerado pelo CondoFree em {new Date().toLocaleDateString("pt-BR")}. O CondoFree não recebe valores do condomínio.</p>
+    </div>
+    </>
   );
 }
 

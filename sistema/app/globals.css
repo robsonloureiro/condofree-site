@@ -244,3 +244,27 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
     z-index: 50;
   }
 }
+
+.impressao-only { display: none; }
+@media print {
+  @page { margin: 15mm; }
+  body { background: #fff !important; }
+  .topo, .menu-grade, .barra-inferior, .gaveta, .gaveta-fundo { display: none !important; }
+  .tela-only { display: none !important; }
+  .impressao-only { display: block !important; }
+  .container { max-width: 100% !important; padding: 0 !important; }
+  .doc-cabecalho { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #123a5c; padding-bottom: 12px; margin-bottom: 16px; }
+  .doc-logo { height: 40px; width: auto; }
+  .doc-titulo { font-size: 22px; font-weight: 800; color: #123a5c; }
+  .doc-sub { font-size: 14px; color: #5b6b7d; }
+  .doc-resumo { display: flex; gap: 12px; margin: 0 0 16px; }
+  .doc-resumo > div { flex: 1; border: 1px solid #dde5ee; border-radius: 10px; padding: 10px 12px; }
+  .doc-resumo span { display: block; font-size: 12px; color: #5b6b7d; }
+  .doc-resumo strong { font-size: 18px; }
+  .doc-tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .doc-tabela th, .doc-tabela td { border: 1px solid #dde5ee; padding: 7px 8px; text-align: left; }
+  .doc-tabela th { background: #f1f5f9; color: #123a5c; }
+  .doc-tabela tr { break-inside: avoid; }
+  .doc-obs { font-size: 13px; color: #b45309; }
+  .doc-rodape { margin-top: 18px; padding-top: 10px; border-top: 1px solid #dde5ee; font-size: 12px; color: #5b6b7d; }
+}
