@@ -280,7 +280,7 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
     width: 264px; flex-shrink: 0; height: 100vh; overflow-y: auto;
     background: #fff; border-right: 1px solid var(--border); padding: 20px 14px;
   }
-  .sidebar img.logo { height: 38px; width: auto; margin-bottom: 4px; }
+  .sidebar img.logo { height: 38px; width: auto; max-width: 100%; object-fit: contain; align-self: flex-start; margin-bottom: 4px; }
   .sidebar .side-condominio { font-weight: 800; font-size: 17px; color: var(--navy); }
   .sidebar .side-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
   .sidebar .side-nav { display: flex; flex-direction: column; gap: 2px; }
