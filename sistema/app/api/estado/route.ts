@@ -43,6 +43,8 @@ export async function GET() {
     votacoes: dados.votacoes,
     lancamentos,
     resumoFinanceiro,
+    funcionarios: usuario.papel === "sindico" ? (dados.funcionarios ?? []) : [],
+    folhas: usuario.papel === "sindico" ? (dados.folhas ?? []) : [],
     pedidosCorrecao:
       usuario.papel === "sindico"
         ? dados.pedidosCorrecao

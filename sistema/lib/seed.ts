@@ -143,6 +143,8 @@ export async function seedDemo(): Promise<void> {
     ],
     lancamentos: [],
     pedidosCorrecao: [],
+    funcionarios: [],
+    folhas: [],
   };
 
   await writeJSON("db/usuarios.json", usuarios);

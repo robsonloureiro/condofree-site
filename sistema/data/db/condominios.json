@@ -1,0 +1,11 @@
+[
+  {
+    "id": "cond_exemplo",
+    "nome": "Condomínio Exemplo",
+    "unidades": 40,
+    "codigoConvite": "EXEMPLO",
+    "criadoEm": "2026-11-06T03:03:16.765Z",
+    "trialFim": "2026-11-20T02:59:59.000Z",
+    "assinaturaStatus": "trial"
+  }
+]

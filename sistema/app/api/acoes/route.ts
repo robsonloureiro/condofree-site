@@ -44,9 +44,14 @@ export async function POST(req: NextRequest) {
   const ehSindico = usuario.papel === "sindico";
   const salvar = () => salvarDados(dados);
 
+  // Dados antigos (inclusive no Blob de produção) não têm esses campos.
+  if (!dados.funcionarios) dados.funcionarios = [];
+  if (!dados.folhas) dados.folhas = [];
+
   const precisaCriar = [
     "criarReserva", "criarAviso", "criarOcorrencia", "criarBoleto", "gerarBoletosMes",
     "criarVotacao", "criarMorador", "criarLancamento", "criarEspaco",
+    "criarFuncionario", "gerarFolhaMes",
   ].includes(acao);
   if (precisaCriar && !podeCriar(dados.condominio)) return erroCriacaoBloqueada();
 
@@ -402,7 +407,146 @@ export async function POST(req: NextRequest) {
       if (lan.origem === "boleto") {
         return Response.json({ ok: false, erro: "Lançamentos de boleto são removidos ao voltar o boleto para pendente." }, { status: 400 });
       }
+      if (lan.origem === "folha") {
+        return Response.json({ ok: false, erro: "Lançamentos de folha de pagamento são criados pelo pagamento da folha e não podem ser removidos manualmente." }, { status: 400 });
+      }
       dados.lancamentos = dados.lancamentos.filter((l) => l.id !== args.id);
+      await salvar();
+      return Response.json({ ok: true });
+    }
+    // ---------- Funcionários e folha de pagamento ----------
+    case "criarFuncionario": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico cadastra funcionários." }, { status: 403 });
+      const salario = Number(args.salarioMensal);
+      if (!args.nome || !args.cargo || !salario || salario <= 0 || !args.dataAdmissao) {
+        return Response.json({ ok: false, erro: "Preencha nome, cargo, salário e data de admissão." }, { status: 400 });
+      }
+      const tipoContrato = ["CLT", "MEI", "Diarista", "Outro"].includes(String(args.tipoContrato))
+        ? (args.tipoContrato as "CLT" | "MEI" | "Diarista" | "Outro")
+        : "Outro";
+      dados.funcionarios.push({
+        id: novoId("fun"),
+        nome: String(args.nome),
+        cargo: String(args.cargo),
+        tipoContrato,
+        salarioMensal: salario,
+        dataAdmissao: String(args.dataAdmissao),
+        ativo: true,
+        criadoEm: hojeISO(),
+      });
+      await salvar();
+      return Response.json({ ok: true });
+    }
+    case "editarFuncionario": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico edita funcionários." }, { status: 403 });
+      const fun = dados.funcionarios.find((f) => f.id === args.id);
+      if (!fun) return Response.json({ ok: false, erro: "Funcionário não encontrado." }, { status: 404 });
+      const salario = Number(args.salarioMensal);
+      if (!args.nome || !args.cargo || !salario || salario <= 0 || !args.dataAdmissao) {
+        return Response.json({ ok: false, erro: "Preencha nome, cargo, salário e data de admissão." }, { status: 400 });
+      }
+      fun.nome = String(args.nome);
+      fun.cargo = String(args.cargo);
+      if (["CLT", "MEI", "Diarista", "Outro"].includes(String(args.tipoContrato))) {
+        fun.tipoContrato = args.tipoContrato as "CLT" | "MEI" | "Diarista" | "Outro";
+      }
+      fun.salarioMensal = salario;
+      fun.dataAdmissao = String(args.dataAdmissao);
+      await salvar();
+      return Response.json({ ok: true });
+    }
+    case "alternarFuncionarioAtivo": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico altera funcionários." }, { status: 403 });
+      const fun = dados.funcionarios.find((f) => f.id === args.id);
+      if (!fun) return Response.json({ ok: false, erro: "Funcionário não encontrado." }, { status: 404 });
+      fun.ativo = !fun.ativo;
+      await salvar();
+      return Response.json({ ok: true, ativo: fun.ativo });
+    }
+    case "gerarFolhaMes": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico gera a folha." }, { status: 403 });
+      const mes = String(args.mes || new Date().toISOString().slice(0, 7));
+      if (!/^\d{4}-\d{2}$/.test(mes)) return Response.json({ ok: false, erro: "Mês inválido." }, { status: 400 });
+      if (dados.folhas.some((f) => f.mes === mes)) {
+        return Response.json({ ok: false, erro: "A folha desse mês já existe." }, { status: 400 });
+      }
+      const ativos = dados.funcionarios.filter((f) => f.ativo);
+      if (ativos.length === 0) {
+        return Response.json({ ok: false, erro: "Cadastre um funcionário ativo primeiro." }, { status: 400 });
+      }
+      const itens = ativos.map((f) => ({
+        funcionarioId: f.id,
+        funcionarioNome: f.nome,
+        cargo: f.cargo,
+        salarioBase: f.salarioMensal,
+        adiantamento: 0,
+        descontos: 0,
+        extras: 0,
+        liquido: f.salarioMensal,
+        pago: false,
+      }));
+      dados.folhas.push({
+        id: novoId("fol"),
+        mes,
+        itens,
+        totalLiquido: itens.reduce((s, i) => s + i.liquido, 0),
+        criadaEm: hojeISO(),
+      });
+      await salvar();
+      return Response.json({ ok: true, criados: itens.length });
+    }
+    case "editarFolhaItem": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico edita a folha." }, { status: 403 });
+      const folha = dados.folhas.find((f) => f.id === args.folhaId);
+      if (!folha) return Response.json({ ok: false, erro: "Folha não encontrada." }, { status: 404 });
+      const item = folha.itens.find((i) => i.funcionarioId === args.funcionarioId);
+      if (!item) return Response.json({ ok: false, erro: "Item não encontrado." }, { status: 404 });
+      if (item.pago) return Response.json({ ok: false, erro: "Item já pago não pode ser editado." }, { status: 400 });
+      const adiantamento = Math.max(0, Number(args.adiantamento) || 0);
+      const descontos = Math.max(0, Number(args.descontos) || 0);
+      const extras = Math.max(0, Number(args.extras) || 0);
+      item.adiantamento = adiantamento;
+      item.descontos = descontos;
+      item.extras = extras;
+      item.liquido = Math.max(0, item.salarioBase + extras - adiantamento - descontos);
+      folha.totalLiquido = folha.itens.reduce((s, i) => s + i.liquido, 0);
+      await salvar();
+      return Response.json({ ok: true, liquido: item.liquido });
+    }
+    case "pagarFolhaItem": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico marca pagamentos." }, { status: 403 });
+      const folha = dados.folhas.find((f) => f.id === args.folhaId);
+      if (!folha) return Response.json({ ok: false, erro: "Folha não encontrada." }, { status: 404 });
+      const item = folha.itens.find((i) => i.funcionarioId === args.funcionarioId);
+      if (!item) return Response.json({ ok: false, erro: "Item não encontrado." }, { status: 404 });
+      if (item.pago) return Response.json({ ok: true, jaPago: true });
+      item.pago = true;
+      const descricao = `Folha ${folha.mes} — ${item.funcionarioNome}`;
+      if (!dados.lancamentos.some((l) => l.origem === "folha" && l.folhaId === folha.id && l.descricao === descricao)) {
+        dados.lancamentos.push({
+          id: novoId("lan"),
+          tipo: "despesa",
+          categoria: "Folha de pagamento",
+          descricao,
+          valor: item.liquido,
+          data: new Date().toISOString().slice(0, 10),
+          pago: true,
+          origem: "folha",
+          boletoId: null,
+          folhaId: folha.id,
+        });
+      }
+      await salvar();
+      return Response.json({ ok: true });
+    }
+    case "excluirFolhaMes": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico exclui folhas." }, { status: 403 });
+      const folha = dados.folhas.find((f) => f.id === args.folhaId);
+      if (!folha) return Response.json({ ok: false, erro: "Folha não encontrada." }, { status: 404 });
+      if (folha.itens.some((i) => i.pago)) {
+        return Response.json({ ok: false, erro: "Não dá para excluir: há itens já pagos nesta folha." }, { status: 400 });
+      }
+      dados.folhas = dados.folhas.filter((f) => f.id !== folha.id);
       await salvar();
       return Response.json({ ok: true });
     }

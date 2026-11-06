@@ -1,0 +1,229 @@
+{
+  "condominio": {
+    "id": "cond_exemplo",
+    "nome": "Condomínio Exemplo",
+    "unidades": 40,
+    "codigoConvite": "EXEMPLO",
+    "criadoEm": "2026-11-06T03:03:16.765Z",
+    "trialFim": "2026-11-20T02:59:59.000Z",
+    "assinaturaStatus": "trial"
+  },
+  "moradores": [
+    {
+      "id": "mor_ana",
+      "usuarioId": "usr_ana",
+      "nome": "Ana Souza",
+      "bloco": "A",
+      "apartamento": "101",
+      "email": "ana@exemplo.com"
+    },
+    {
+      "id": "mor_carlos",
+      "usuarioId": "usr_carlos",
+      "nome": "Carlos Lima",
+      "bloco": "A",
+      "apartamento": "102",
+      "email": "carlos@exemplo.com"
+    },
+    {
+      "id": "mor_fernanda",
+      "usuarioId": "usr_fernanda",
+      "nome": "Fernanda Rocha",
+      "bloco": "B",
+      "apartamento": "201",
+      "email": "fernanda@exemplo.com"
+    },
+    {
+      "id": "mor_paulo",
+      "usuarioId": "usr_paulo",
+      "nome": "Paulo Mendes",
+      "bloco": "B",
+      "apartamento": "202",
+      "email": "paulo@exemplo.com"
+    }
+  ],
+  "espacos": [
+    {
+      "id": "esp_salao",
+      "nome": "Salão de festas"
+    },
+    {
+      "id": "esp_churras",
+      "nome": "Churrasqueira"
+    },
+    {
+      "id": "esp_quadra",
+      "nome": "Quadra"
+    }
+  ],
+  "reservas": [
+    {
+      "id": "res_1",
+      "espacoId": "esp_salao",
+      "espacoNome": "Salão de festas",
+      "moradorId": "mor_ana",
+      "moradorNome": "Ana Souza",
+      "data": "2026-11-07",
+      "inicio": "14:00",
+      "fim": "18:00",
+      "status": "aprovada",
+      "criadoEm": "2026-11-06T03:03:16.765Z"
+    },
+    {
+      "id": "res_mw4e3u8e7brg4j",
+      "espacoId": "esp_churras",
+      "espacoNome": "Churrasqueira",
+      "moradorId": "mor_ana",
+      "moradorNome": "Ana Souza",
+      "data": "2026-11-08",
+      "inicio": "10:00",
+      "fim": "14:00",
+      "status": "aprovada",
+      "criadoEm": "2026-11-06T03:03:23.342Z"
+    }
+  ],
+  "avisos": [
+    {
+      "id": "av_1",
+      "titulo": "Limpeza da caixa d'água",
+      "texto": "A limpeza da caixa d'água será feita na segunda-feira, das 8h às 12h. Pode faltar água nesse período.",
+      "criadoEm": "2026-11-06T03:03:16.765Z",
+      "lidoPor": [
+        "mor_ana"
+      ]
+    },
+    {
+      "id": "av_2",
+      "titulo": "Festa de fim de ano",
+      "texto": "A festa de fim de ano será no salão de festas. Tragam um prato para compartilhar!",
+      "criadoEm": "2026-11-06T03:03:16.765Z",
+      "lidoPor": []
+    }
+  ],
+  "ocorrencias": [
+    {
+      "id": "oc_1",
+      "titulo": "Lâmpada queimada",
+      "descricao": "Lâmpada do corredor do 2º andar do Bloco B queimada.",
+      "local": "Bloco B, 2º andar",
+      "fotoUrl": null,
+      "status": "em_andamento",
+      "moradorId": "mor_fernanda",
+      "moradorNome": "Fernanda Rocha",
+      "criadoEm": "2026-11-06T03:03:16.765Z"
+    }
+  ],
+  "boletos": [
+    {
+      "id": "bol_1",
+      "moradorId": "mor_ana",
+      "moradorNome": "Ana Souza",
+      "valor": 482.9,
+      "vencimento": "2026-11-10",
+      "status": "pago",
+      "codigoBarras": null,
+      "mes": "2026-11"
+    },
+    {
+      "id": "bol_2",
+      "moradorId": "mor_fernanda",
+      "moradorNome": "Fernanda Rocha",
+      "valor": 482.9,
+      "vencimento": "2026-11-01",
+      "status": "vencido",
+      "codigoBarras": null,
+      "mes": "2026-11"
+    }
+  ],
+  "votacoes": [
+    {
+      "id": "vot_1",
+      "pergunta": "Pintura da fachada: qual cor vocês preferem?",
+      "opcoes": [
+        "Branca",
+        "Bege",
+        "Cinza"
+      ],
+      "votos": [
+        {
+          "moradorId": "mor_ana",
+          "moradorNome": "Ana Souza",
+          "opcao": 0
+        },
+        {
+          "moradorId": "mor_carlos",
+          "moradorNome": "Carlos Lima",
+          "opcao": 0
+        },
+        {
+          "moradorId": "mor_fernanda",
+          "moradorNome": "Fernanda Rocha",
+          "opcao": 2
+        }
+      ],
+      "aberta": true,
+      "criadaEm": "2026-11-06T03:03:16.765Z",
+      "encerradaEm": null,
+      "ata": null
+    }
+  ],
+  "lancamentos": [
+    {
+      "id": "lan_mw4e3ub7srp65z",
+      "tipo": "receita",
+      "categoria": "boleto",
+      "descricao": "Boleto — Ana Souza",
+      "valor": 482.9,
+      "data": "2026-11-06",
+      "pago": true,
+      "origem": "boleto",
+      "boletoId": "bol_1"
+    },
+    {
+      "id": "lan_mw4z90o6be2g1n",
+      "tipo": "despesa",
+      "categoria": "Folha de pagamento",
+      "descricao": "Folha 2026-11 — José da Silva",
+      "valor": 2250,
+      "data": "2026-11-06",
+      "pago": true,
+      "origem": "folha",
+      "boletoId": null,
+      "folhaId": "fol_mw4z90k6myi5jj"
+    }
+  ],
+  "pedidosCorrecao": [],
+  "funcionarios": [
+    {
+      "id": "fun_mw4z90jire0eji",
+      "nome": "José da Silva",
+      "cargo": "Porteiro",
+      "tipoContrato": "CLT",
+      "salarioMensal": 2500,
+      "dataAdmissao": "2026-01-10",
+      "ativo": true,
+      "criadoEm": "2026-11-06T12:55:16.734Z"
+    }
+  ],
+  "folhas": [
+    {
+      "id": "fol_mw4z90k6myi5jj",
+      "mes": "2026-11",
+      "itens": [
+        {
+          "funcionarioId": "fun_mw4z90jire0eji",
+          "funcionarioNome": "José da Silva",
+          "cargo": "Porteiro",
+          "salarioBase": 2500,
+          "adiantamento": 200,
+          "descontos": 100,
+          "extras": 50,
+          "liquido": 2250,
+          "pago": true
+        }
+      ],
+      "totalLiquido": 2250,
+      "criadaEm": "2026-11-06T12:55:16.758Z"
+    }
+  ]
+}

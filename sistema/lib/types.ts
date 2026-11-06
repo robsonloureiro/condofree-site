@@ -100,8 +100,42 @@ export interface Lancamento {
   valor: number;
   data: string; // YYYY-MM-DD
   pago: boolean;
-  origem?: "manual" | "boleto";
+  origem?: "manual" | "boleto" | "folha";
   boletoId?: string | null;
+  folhaId?: string | null;
+}
+
+export type TipoContrato = "CLT" | "MEI" | "Diarista" | "Outro";
+
+export interface Funcionario {
+  id: string;
+  nome: string;
+  cargo: string;
+  tipoContrato: TipoContrato;
+  salarioMensal: number;
+  dataAdmissao: string; // YYYY-MM-DD
+  ativo: boolean;
+  criadoEm: string;
+}
+
+export interface FolhaItem {
+  funcionarioId: string;
+  funcionarioNome: string;
+  cargo: string;
+  salarioBase: number;
+  adiantamento: number;
+  descontos: number;
+  extras: number;
+  liquido: number;
+  pago: boolean;
+}
+
+export interface FolhaMensal {
+  id: string;
+  mes: string; // YYYY-MM
+  itens: FolhaItem[];
+  totalLiquido: number;
+  criadaEm: string;
 }
 
 export interface PedidoCorrecao {
@@ -126,6 +160,8 @@ export interface DadosCondominio {
   votacoes: Votacao[];
   lancamentos: Lancamento[];
   pedidosCorrecao: PedidoCorrecao[];
+  funcionarios: Funcionario[];
+  folhas: FolhaMensal[];
 }
 
 export interface Sessao {

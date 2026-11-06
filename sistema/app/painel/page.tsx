@@ -1,9 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LOGO_DATA_URI } from "@/lib/logo";
 
-type Aba = "inicio" | "reservas" | "avisos" | "ocorrencias" | "boletos" | "financeiro" | "votacoes" | "moradores" | "plano" | "ajuda";
+type Aba = "inicio" | "reservas" | "avisos" | "ocorrencias" | "boletos" | "financeiro" | "votacoes" | "moradores" | "funcionarios" | "plano" | "ajuda";
 
 const MODULOS: { id: Aba; rotulo: string; icone: string; papeis: ("sindico" | "morador")[] }[] = [
   { id: "inicio", rotulo: "Início", icone: "🏠", papeis: ["sindico", "morador"] },
@@ -14,6 +13,7 @@ const MODULOS: { id: Aba; rotulo: string; icone: string; papeis: ("sindico" | "m
   { id: "financeiro", rotulo: "Financeiro", icone: "💰", papeis: ["sindico", "morador"] },
   { id: "votacoes", rotulo: "Votações", icone: "🗳️", papeis: ["sindico", "morador"] },
   { id: "moradores", rotulo: "Moradores", icone: "👥", papeis: ["sindico"] },
+  { id: "funcionarios", rotulo: "Funcionários", icone: "👔", papeis: ["sindico"] },
   { id: "plano", rotulo: "Plano e FAQ", icone: "⭐", papeis: ["sindico", "morador"] },
   { id: "ajuda", rotulo: "Ajuda", icone: "❓", papeis: ["sindico", "morador"] },
 ];
@@ -116,7 +116,7 @@ export default function Painel() {
       <header className="topo">
         <button className="hamburguer" onClick={() => setGaveta(true)} aria-label="Abrir menu">☰</button>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="logo" src={LOGO_DATA_URI} alt="CondoFree" />
+        <img className="logo" src="/logo.png" alt="CondoFree" />
         <div>
           <div className="titulo">{estado.condominio.nome}</div>
           <div className="sub">Síndico: {ehSindico ? usuario.nome : "Síndico do condomínio"}</div>
@@ -198,6 +198,9 @@ export default function Painel() {
         )}
         {aba === "moradores" && ehSindico && (
           <MoradoresTab estado={estado} ehSindico={ehSindico} campo={campo} form={form} setForm={setForm} acao={acao} setOk={setOk} editandoMorador={editandoMorador} setEditandoMorador={setEditandoMorador} />
+        )}
+        {aba === "funcionarios" && ehSindico && (
+          <FuncionariosTab estado={estado} ehSindico={ehSindico} campo={campo} form={form} setForm={setForm} acao={acao} setOk={setOk} />
         )}
         {aba === "plano" && (
           <PlanoTab estado={estado} ehSindico={ehSindico} acao={acao} setOk={setOk} setErro={setErro} />
@@ -601,6 +604,7 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
             <strong>{l.descricao}</strong> — {brl(l.valor)} · {l.categoria} · {dataBR(l.data)}{" "}
             {l.pago ? <span className="etiqueta verde">pago</span> : <span className="etiqueta amber">pendente</span>}
             {l.origem === "boleto" && <span className="etiqueta cinza">boleto</span>}
+            {l.origem === "folha" && <span className="etiqueta cinza">folha</span>}
             <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
               <button className="btn secundario pequeno" onClick={() => acao("marcarLancamentoPago", { id: l.id, pago: !l.pago })}>
                 {l.pago ? "Marcar pendente" : "Marcar pago"}
@@ -739,6 +743,162 @@ function MoradoresTab({ estado, campo, form, setForm, acao, setOk, editandoMorad
             <button className="btn perigo pequeno" onClick={() => acao("removerMorador", { id: m.id })}>Remover</button>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps) {
+  const [editando, setEditando] = useState<any>(null);
+  const [mesFolha, setMesFolha] = useState(new Date().toISOString().slice(0, 7));
+  const [edicao, setEdicao] = useState<Record<string, { adiantamento: string; descontos: string; extras: string }>>({});
+  const funcionarios = estado.funcionarios || [];
+  const folhas = estado.folhas || [];
+  const folha = folhas.find((f: any) => f.mes === mesFolha) || null;
+  const mesesNomes = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  function nomeMes(mes: string) {
+    const [y, m] = mes.split("-");
+    return `${mesesNomes[Number(m) - 1]}/${y}`;
+  }
+  function valorEdicao(funcionarioId: string, chave: "adiantamento" | "descontos" | "extras", atual: number) {
+    const v = edicao[funcionarioId]?.[chave];
+    return v !== undefined ? v : String(atual);
+  }
+  function mudarEdicao(funcionarioId: string, chave: "adiantamento" | "descontos" | "extras", valor: string) {
+    const atual = edicao[funcionarioId] || { adiantamento: "0", descontos: "0", extras: "0" };
+    setEdicao({ ...edicao, [funcionarioId]: { ...atual, [chave]: valor } });
+  }
+  return (
+    <div>
+      <div className="cartao">
+        <h2>👔 Funcionários e folha de pagamento</h2>
+        <p>Cadastre os funcionários do condomínio e gere a folha do mês. Ao marcar um item como pago, o valor entra automaticamente como despesa no Financeiro.</p>
+        <p style={{ background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 12, padding: "10px 12px", fontSize: 14 }}>
+          ⚠️ Controle interno simples — não emite holerite oficial nem calcula encargos; as obrigações legais continuam com o contador do condomínio.
+        </p>
+      </div>
+      <div className="cartao">
+        <h3>{editando ? "Editar funcionário" : "Cadastrar funcionário"}</h3>
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (editando) {
+            const d = await acao("editarFuncionario", { id: editando.id, nome: form.nomeFun, cargo: form.cargoFun, tipoContrato: form.tipoFun || "CLT", salarioMensal: Number(form.salarioFun), dataAdmissao: form.admissaoFun });
+            if (d?.ok) { setOk("Funcionário atualizado."); setEditando(null); setForm({}); }
+          } else {
+            const d = await acao("criarFuncionario", { nome: form.nomeFun, cargo: form.cargoFun, tipoContrato: form.tipoFun || "CLT", salarioMensal: Number(form.salarioFun), dataAdmissao: form.admissaoFun });
+            if (d?.ok) { setOk("Funcionário cadastrado."); setForm({}); }
+          }
+        }}>
+          <div className="campo"><label>Nome</label><input {...campo("nomeFun", editando?.nome)} placeholder="Ex.: José da Silva" /></div>
+          <div className="linha">
+            <div className="campo"><label>Cargo</label><input {...campo("cargoFun", editando?.cargo)} placeholder="Ex.: Porteiro" /></div>
+            <div className="campo">
+              <label>Tipo de contrato</label>
+              <select {...campo("tipoFun", editando?.tipoContrato)}>
+                <option value="CLT">CLT</option>
+                <option value="MEI">MEI</option>
+                <option value="Diarista">Diarista</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+          </div>
+          <div className="linha">
+            <div className="campo"><label>Salário mensal (R$)</label><input type="number" step="0.01" {...campo("salarioFun", editando ? String(editando.salarioMensal) : undefined)} placeholder="2500,00" /></div>
+            <div className="campo"><label>Data de admissão</label><input type="date" {...campo("admissaoFun", editando?.dataAdmissao)} /></div>
+          </div>
+          <button className="btn" type="submit">{editando ? "Salvar alterações" : "Cadastrar"}</button>
+          {editando && <button className="btn secundario" type="button" style={{ marginLeft: 8 }} onClick={() => { setEditando(null); setForm({}); }}>Cancelar</button>}
+        </form>
+      </div>
+      <div className="cartao">
+        <h3>Funcionários ({funcionarios.length})</h3>
+        {funcionarios.length === 0 && <p>Nenhum funcionário cadastrado ainda.</p>}
+        {funcionarios.map((f: any) => (
+          <div key={f.id} style={{ borderBottom: "1px solid #dde5ee", padding: "8px 0" }}>
+            <strong>{f.nome}</strong> — {f.cargo} · {f.tipoContrato} · {brl(f.salarioMensal)}/mês · admitido em {dataBR(f.dataAdmissao)}{" "}
+            {f.ativo ? <span className="etiqueta verde">ativo</span> : <span className="etiqueta cinza">inativo</span>}
+            <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
+              <button className="btn secundario pequeno" onClick={() => { setEditando(f); setForm({}); }}>Editar</button>
+              <button className="btn secundario pequeno" onClick={async () => {
+                const d = await acao("alternarFuncionarioAtivo", { id: f.id });
+                if (d?.ok) setOk(d.ativo ? "Funcionário ativado." : "Funcionário desativado. Ele não entra nas próximas folhas.");
+              }}>{f.ativo ? "Desativar" : "Ativar"}</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="cartao">
+        <h3>📋 Folha de pagamento</h3>
+        <div className="linha">
+          <div className="campo"><label>Mês</label><input type="month" value={mesFolha} onChange={(e) => setMesFolha(e.target.value)} /></div>
+        </div>
+        {!folha && (
+          <button className="btn" onClick={async () => {
+            const d = await acao("gerarFolhaMes", { mes: mesFolha });
+            if (d?.ok) setOk(`Folha de ${nomeMes(mesFolha)} gerada com ${d.criados} funcionário(s).`);
+          }}>Gerar folha do mês</button>
+        )}
+        {folha && (
+          <div>
+            <p><strong>Folha de {nomeMes(folha.mes)}</strong> · Total líquido: <strong>{brl(folha.totalLiquido)}</strong></p>
+            {folha.itens.map((item: any) => (
+              <div key={item.funcionarioId} style={{ borderBottom: "1px solid #dde5ee", padding: "10px 0" }}>
+                <strong>{item.funcionarioNome}</strong> — {item.cargo} · base {brl(item.salarioBase)}{" "}
+                {item.pago ? <span className="etiqueta verde">pago</span> : <span className="etiqueta amber">a pagar</span>}
+                <div className="linha" style={{ marginTop: 8 }}>
+                  <div className="campo"><label>Adiantamento (R$)</label><input type="number" step="0.01" min="0" disabled={item.pago} value={valorEdicao(item.funcionarioId, "adiantamento", item.adiantamento)} onChange={(e) => mudarEdicao(item.funcionarioId, "adiantamento", e.target.value)} /></div>
+                  <div className="campo"><label>Descontos (R$)</label><input type="number" step="0.01" min="0" disabled={item.pago} value={valorEdicao(item.funcionarioId, "descontos", item.descontos)} onChange={(e) => mudarEdicao(item.funcionarioId, "descontos", e.target.value)} /></div>
+                  <div className="campo"><label>Extras (R$)</label><input type="number" step="0.01" min="0" disabled={item.pago} value={valorEdicao(item.funcionarioId, "extras", item.extras)} onChange={(e) => mudarEdicao(item.funcionarioId, "extras", e.target.value)} /></div>
+                </div>
+                <p>Líquido: <strong>{brl(item.liquido)}</strong></p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {!item.pago && (
+                    <>
+                      <button className="btn secundario pequeno" onClick={async () => {
+                        const d = await acao("editarFolhaItem", {
+                          folhaId: folha.id,
+                          funcionarioId: item.funcionarioId,
+                          adiantamento: Number(valorEdicao(item.funcionarioId, "adiantamento", item.adiantamento)) || 0,
+                          descontos: Number(valorEdicao(item.funcionarioId, "descontos", item.descontos)) || 0,
+                          extras: Number(valorEdicao(item.funcionarioId, "extras", item.extras)) || 0,
+                        });
+                        if (d?.ok) { setOk("Item atualizado."); setEdicao({ ...edicao, [item.funcionarioId]: { adiantamento: "0", descontos: "0", extras: "0" } }); }
+                      }}>Salvar valores</button>
+                      <button className="btn pequeno" onClick={async () => {
+                        const d = await acao("pagarFolhaItem", { folhaId: folha.id, funcionarioId: item.funcionarioId });
+                        if (d?.ok) setOk("Pagamento registrado e lançado no Financeiro.");
+                      }}>Marcar como pago</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+            <p style={{ marginTop: 10 }}>
+              Total bruto: <strong>{brl(folha.itens.reduce((s: number, i: any) => s + i.salarioBase + i.extras, 0))}</strong> ·{" "}
+              Adiantamentos e descontos: <strong>{brl(folha.itens.reduce((s: number, i: any) => s + i.adiantamento + i.descontos, 0))}</strong> ·{" "}
+              Total líquido: <strong>{brl(folha.totalLiquido)}</strong>
+            </p>
+            {!folha.itens.some((i: any) => i.pago) && (
+              <button className="btn perigo pequeno" onClick={async () => {
+                if (confirm(`Excluir a folha de ${nomeMes(folha.mes)}?`)) {
+                  const d = await acao("excluirFolhaMes", { folhaId: folha.id });
+                  if (d?.ok) setOk("Folha excluída.");
+                }
+              }}>Excluir folha do mês</button>
+            )}
+          </div>
+        )}
+        {folhas.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <h4>Folhas geradas</h4>
+            {[...folhas].sort((a: any, b: any) => (a.mes < b.mes ? 1 : -1)).map((f: any) => (
+              <p key={f.id}>
+                <button className="btn secundario pequeno" onClick={() => setMesFolha(f.mes)}>{nomeMes(f.mes)}</button>{" "}
+                {brl(f.totalLiquido)} · {f.itens.filter((i: any) => i.pago).length}/{f.itens.length} pago(s)
+              </p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

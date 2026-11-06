@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
     votacoes: [],
     lancamentos: [],
     pedidosCorrecao: [],
+    funcionarios: [],
+    folhas: [],
   };
   usuarios.push(usuario);
   await salvarUsuarios(usuarios);

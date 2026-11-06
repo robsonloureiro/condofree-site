@@ -1,0 +1,47 @@
+[
+  {
+    "id": "usr_sindico",
+    "email": "sindico@exemplo.com",
+    "nome": "Síndico Exemplo",
+    "papel": "sindico",
+    "condominioId": "cond_exemplo",
+    "senhaHash": "517b4515f3939e5a535a485f0440551f:5ad6d435bfbb25dcbee8c7c435ca321656ffe879b3d23e5260d02ddfc6158847dffea0ea91a5363dd3f268c12d2bbb76e88d4556f760e51a445465e7691e49f5",
+    "criadoEm": "2026-11-06T03:03:16.765Z"
+  },
+  {
+    "id": "usr_ana",
+    "email": "ana@exemplo.com",
+    "nome": "Ana Souza",
+    "papel": "morador",
+    "condominioId": "cond_exemplo",
+    "senhaHash": "56eb577aa9d9934fc51465af3450daef:99588760d8ace86ff32b304f5fb55e8c5b20ea4cfc8d894ff574822b8b9c6e7a9a41a02e6f3d7352baa9b6db0da6f93b9c000d20671b8c7ddca1a2aa236d0a03",
+    "criadoEm": "2026-11-06T03:03:16.765Z"
+  },
+  {
+    "id": "usr_carlos",
+    "email": "carlos@exemplo.com",
+    "nome": "Carlos Lima",
+    "papel": "morador",
+    "condominioId": "cond_exemplo",
+    "senhaHash": "470f9a05635ed8f2f556e574263b58bb:e9b4bc5ab83909f9a25e3529dd3ba75bdb3ce0b0746d60d6e3a9b0c80834b1d58c5ff5812669c0261fd31f4d2724a8e0473d9c8ed5255a993cfb69cc8c1eae72",
+    "criadoEm": "2026-11-06T03:03:16.765Z"
+  },
+  {
+    "id": "usr_fernanda",
+    "email": "fernanda@exemplo.com",
+    "nome": "Fernanda Rocha",
+    "papel": "morador",
+    "condominioId": "cond_exemplo",
+    "senhaHash": "588e655f5a5555f93d6c01851b77d3f0:172b9a8ffc06199709e87c4410d7adf3a00da05da03ee87c18fe9a5e2996c316b5747be71bf5d1ecebefbacba59866db74b353d8cee6a54e4b542418c8e7d9fb",
+    "criadoEm": "2026-11-06T03:03:16.765Z"
+  },
+  {
+    "id": "usr_paulo",
+    "email": "paulo@exemplo.com",
+    "nome": "Paulo Mendes",
+    "papel": "morador",
+    "condominioId": "cond_exemplo",
+    "senhaHash": "e099320ac7777ac8f36fda2da08c02d2:9f33748b00c815c7b716b4a4d21cf55d475316e7eda5d89f0a28a762fd5d8966dffc5e4ca179aa13a69adac3563d412b857d30360fffe8021710b4fddd46d2c4",
+    "criadoEm": "2026-11-06T03:03:16.765Z"
+  }
+]

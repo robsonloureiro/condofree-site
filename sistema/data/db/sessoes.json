@@ -1,0 +1,22 @@
+[
+  {
+    "token": "f98a6e85ea8c08fe8716bc75776208328411cb0934c24b3836a5ed6362d65030",
+    "usuarioId": "usr_sindico",
+    "expiraEm": "2026-12-06T03:03:17.189Z"
+  },
+  {
+    "token": "faf73ff3602153dbeaf78b82d651ad32f910592797ae528ac40a44ae4a0963db",
+    "usuarioId": "usr_ana",
+    "expiraEm": "2026-12-06T03:03:23.319Z"
+  },
+  {
+    "token": "513cbe2389f07bd761994fe9ad9db71310ef3e71e3d1220486601a36984f17d7",
+    "usuarioId": "usr_sindico",
+    "expiraEm": "2026-12-06T12:55:16.702Z"
+  },
+  {
+    "token": "576d7b7fcc770f048b3be45f013c35d7ebe082254b5633092b0b20506009f7a3",
+    "usuarioId": "usr_ana",
+    "expiraEm": "2026-12-06T12:55:17.046Z"
+  }
+]
