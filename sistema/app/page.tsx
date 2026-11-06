@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LOGO_DATA_URI } from "@/lib/logo";
 
 type Aba = "entrar" | "sindico" | "morador";
 
@@ -11,6 +10,7 @@ export default function Login() {
   const [erro, setErro] = useState("");
   const [ok, setOk] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [form, setForm] = useState({
     email: "",
     senha: "",
@@ -29,6 +29,20 @@ export default function Login() {
         if (d.autenticado) router.replace("/painel");
       })
       .catch(() => undefined);
+    // Pré-preenche o cadastro vindo da landing (condofree.com.br / site)
+    const params = new URLSearchParams(window.location.search);
+    const abaParam = params.get("aba");
+    if (abaParam === "sindico" || abaParam === "morador") {
+      setAba(abaParam);
+    }
+    setForm((f) => ({
+      ...f,
+      nome: params.get("nome") || f.nome,
+      email: params.get("email") || f.email,
+      nomeCondominio: params.get("condominio") || f.nomeCondominio,
+      unidades: params.get("unidades") || f.unidades,
+      codigoConvite: params.get("codigo") || f.codigoConvite,
+    }));
   }, [router]);
 
   function campo(nome: string) {
@@ -105,7 +119,7 @@ export default function Login() {
     <div className="login-wrap">
       <div className="logo-grande">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={LOGO_DATA_URI} alt="CondoFree" />
+        <img src="/logo.png" alt="CondoFree" />
         <h1 style={{ color: "#0b2a4a", margin: "8px 0 0" }}>Acesse o seu condomínio</h1>
         <p style={{ color: "#5b6b7d", marginTop: 4 }}>
           Sem e-mail de confirmação: sua conta já nasce ativa. Cadastre-se na aba ao lado e entre com o mesmo e-mail e senha.
@@ -166,7 +180,34 @@ export default function Login() {
         </div>
         <div className="campo">
           <label>Senha</label>
-          <input {...campo("senha")} type="password" placeholder="Mínimo 6 caracteres" />
+          <div style={{ position: "relative" }}>
+            <input
+              {...campo("senha")}
+              type={mostrarSenha ? "text" : "password"}
+              placeholder="Mínimo 6 caracteres"
+              style={{ paddingRight: 44 }}
+            />
+            <button
+              type="button"
+              onClick={() => setMostrarSenha(!mostrarSenha)}
+              aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+              title={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 19,
+                lineHeight: 1,
+                padding: 4,
+              }}
+            >
+              {mostrarSenha ? "🙈" : "👁️"}
+            </button>
+          </div>
         </div>
         <button className="btn" type="submit" disabled={carregando} style={{ width: "100%" }}>
           {carregando ? "Aguarde..." : aba === "entrar" ? "Entrar" : "Criar minha conta grátis"}
