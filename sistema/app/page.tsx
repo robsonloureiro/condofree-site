@@ -3,11 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LOGO_DATA_URI } from "../lib/logo";
 
-type Aba = "entrar" | "sindico" | "morador";
-
 export default function Login() {
   const router = useRouter();
-  const [aba, setAba] = useState<Aba>("entrar");
   const [erro, setErro] = useState("");
   const [ok, setOk] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -15,12 +12,6 @@ export default function Login() {
   const [form, setForm] = useState({
     email: "",
     senha: "",
-    nome: "",
-    nomeCondominio: "",
-    unidades: "",
-    codigoConvite: "",
-    bloco: "",
-    apartamento: "",
   });
 
   useEffect(() => {
@@ -30,19 +21,10 @@ export default function Login() {
         if (d.autenticado) router.replace("/painel");
       })
       .catch(() => undefined);
-    // Pré-preenche o cadastro vindo da landing (condofree.com.br / site)
     const params = new URLSearchParams(window.location.search);
-    const abaParam = params.get("aba");
-    if (abaParam === "sindico" || abaParam === "morador") {
-      setAba(abaParam);
-    }
     setForm((f) => ({
       ...f,
-      nome: params.get("nome") || f.nome,
       email: params.get("email") || f.email,
-      nomeCondominio: params.get("condominio") || f.nomeCondominio,
-      unidades: params.get("unidades") || f.unidades,
-      codigoConvite: params.get("codigo") || f.codigoConvite,
     }));
   }, [router]);
 
@@ -60,40 +42,15 @@ export default function Login() {
     setOk("");
     setCarregando(true);
     try {
-      let url = "/api/auth/login";
-      let corpo: Record<string, unknown> = { email: form.email, senha: form.senha };
-      if (aba === "sindico") {
-        url = "/api/auth/cadastro-sindico";
-        corpo = {
-          nomeCondominio: form.nomeCondominio,
-          unidades: Number(form.unidades),
-          nome: form.nome,
-          email: form.email,
-          senha: form.senha,
-        };
-      } else if (aba === "morador") {
-        url = "/api/auth/cadastro-morador";
-        corpo = {
-          codigoConvite: form.codigoConvite,
-          nome: form.nome,
-          bloco: form.bloco,
-          apartamento: form.apartamento,
-          email: form.email,
-          senha: form.senha,
-        };
-      }
-      const res = await fetch(url, {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(corpo),
+        body: JSON.stringify({ email: form.email, senha: form.senha }),
       });
       const d = await res.json();
       if (!d.ok) {
         setErro(d.erro || "Não foi possível continuar.");
         return;
-      }
-      if (d.codigoConvite) {
-        setOk(`Conta criada! Código de convite do seu condomínio: ${d.codigoConvite}. Guarde e passe aos moradores.`);
       }
       router.replace("/painel");
     } catch {
@@ -112,7 +69,6 @@ export default function Login() {
       return;
     }
     setForm({ ...form, email: "sindico@exemplo.com", senha: "exemplo123" });
-    setAba("entrar");
     setOk("Demonstração criada! Entre com síndico@exemplo.com / exemplo123.");
   }
 
@@ -123,58 +79,14 @@ export default function Login() {
         <img src={LOGO_DATA_URI} alt="CondoFree" />
         <h1 style={{ color: "#0b2a4a", margin: "8px 0 0" }}>Acesse o seu condomínio</h1>
         <p style={{ color: "#5b6b7d", marginTop: 4 }}>
-          Sem e-mail de confirmação: sua conta já nasce ativa. Cadastre-se na aba ao lado e entre com o mesmo e-mail e senha.
+          Entre com o mesmo e-mail e senha da sua conta.
         </p>
-      </div>
-
-      <div className="abas-login">
-        <button className={aba === "entrar" ? "ativo" : ""} onClick={() => setAba("entrar")}>Entrar</button>
-        <button className={aba === "sindico" ? "ativo" : ""} onClick={() => setAba("sindico")}>Sou síndico — criar conta</button>
-        <button className={aba === "morador" ? "ativo" : ""} onClick={() => setAba("morador")}>Sou morador — criar conta</button>
       </div>
 
       {erro && <div className="erro">{erro}</div>}
       {ok && <div className="ok-msg">{ok}</div>}
 
       <form onSubmit={enviar} className="cartao">
-        {aba === "sindico" && (
-          <>
-            <div className="campo">
-              <label>Nome do condomínio</label>
-              <input {...campo("nomeCondominio")} placeholder="Ex.: Condomínio Jardim das Flores" />
-            </div>
-            <div className="campo">
-              <label>Quantas unidades?</label>
-              <input {...campo("unidades")} type="number" min={1} placeholder="Ex.: 40" />
-            </div>
-            <div className="campo">
-              <label>Seu nome</label>
-              <input {...campo("nome")} placeholder="Seu nome completo" />
-            </div>
-          </>
-        )}
-        {aba === "morador" && (
-          <>
-            <div className="campo">
-              <label>Código de convite do condomínio</label>
-              <input {...campo("codigoConvite")} placeholder="Peça o código ao síndico" />
-            </div>
-            <div className="campo">
-              <label>Seu nome</label>
-              <input {...campo("nome")} placeholder="Seu nome completo" />
-            </div>
-            <div className="linha">
-              <div className="campo">
-                <label>Bloco</label>
-                <input {...campo("bloco")} placeholder="Ex.: A" />
-              </div>
-              <div className="campo">
-                <label>Apartamento</label>
-                <input {...campo("apartamento")} placeholder="Ex.: 101" />
-              </div>
-            </div>
-          </>
-        )}
         <div className="campo">
           <label>E-mail</label>
           <input {...campo("email")} type="email" placeholder="voce@email.com" />
@@ -217,14 +129,25 @@ export default function Login() {
           </div>
         </div>
         <button className="btn" type="submit" disabled={carregando} style={{ width: "100%" }}>
-          {carregando ? "Aguarde..." : aba === "entrar" ? "Entrar" : "Criar minha conta grátis"}
+          {carregando ? "Aguarde..." : "Entrar"}
         </button>
-        {aba === "sindico" && (
-          <p style={{ color: "#5b6b7d", fontSize: 14, marginTop: 12 }}>
-            14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.
-          </p>
-        )}
       </form>
+
+      <button
+        className="btn secundario"
+        type="button"
+        style={{ width: "100%" }}
+        onClick={() => {
+          const params = new URLSearchParams(window.location.search);
+          const abaParam = params.get("aba");
+          router.push(abaParam === "sindico" || abaParam === "morador" ? `/cadastro?aba=${abaParam}` : "/cadastro");
+        }}
+      >
+        Criar conta grátis
+      </button>
+      <p style={{ textAlign: "center", color: "#5b6b7d", fontSize: 14, marginTop: 8 }}>
+        14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês.
+      </p>
 
       <div className="cartao" style={{ fontSize: 14 }}>
         <strong>Conta de teste</strong>
