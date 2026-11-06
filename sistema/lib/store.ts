@@ -1,10 +1,9 @@
-import { put, list } from "@vercel/blob";
+import { put, get } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
 
 // Armazenamento: em produção usa Vercel Blob (BLOB_READ_WRITE_TOKEN).
-// O store é privado (criado com access: private), então os blobs ficam
-// privados mesmo com access: "public" no put (opção legada do SDK).
+// O store é privado — por isso access: "private" no put/get (SDK v2).
 // Sem o token (desenvolvimento local), usa arquivos JSON em ./data.
 const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -16,12 +15,10 @@ function localPath(key: string) {
 export async function readJSON<T>(key: string, fallback: T): Promise<T> {
   try {
     if (useBlob) {
-      const { blobs } = await list({ prefix: key, limit: 10 });
-      const hit = blobs.find((b) => b.pathname === key);
-      if (!hit) return fallback;
-      const res = await fetch(hit.downloadUrl, { cache: "no-store" });
-      if (!res.ok) return fallback;
-      return (await res.json()) as T;
+      const res = await get(key, { access: "private", useCache: false });
+      if (!res || res.statusCode !== 200 || !res.stream) return fallback;
+      const text = await new Response(res.stream).text();
+      return JSON.parse(text) as T;
     }
     const p = localPath(key);
     if (!fs.existsSync(p)) return fallback;
@@ -35,7 +32,7 @@ export async function writeJSON(key: string, value: unknown): Promise<void> {
   const body = JSON.stringify(value, null, 2);
   if (useBlob) {
     await put(key, body, {
-      access: "public",
+      access: "private",
       contentType: "application/json",
       addRandomSuffix: false,
     });
