@@ -35,6 +35,7 @@ export async function writeJSON(key: string, value: unknown): Promise<void> {
       access: "private",
       contentType: "application/json",
       addRandomSuffix: false,
+      allowOverwrite: true,
     });
     return;
   }
