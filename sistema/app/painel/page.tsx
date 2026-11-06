@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LOGO_DATA_URI } from "../../lib/logo";
 
 type Aba = "inicio" | "reservas" | "avisos" | "ocorrencias" | "boletos" | "financeiro" | "votacoes" | "moradores" | "funcionarios" | "plano" | "ajuda";
 
@@ -116,7 +117,7 @@ export default function Painel() {
       <header className="topo">
         <button className="hamburguer" onClick={() => setGaveta(true)} aria-label="Abrir menu">☰</button>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="logo" src="/logo.png" alt="CondoFree" />
+        <img className="logo" src={LOGO_DATA_URI} alt="CondoFree" />
         <div>
           <div className="titulo">{estado.condominio.nome}</div>
           <div className="sub">Síndico: {ehSindico ? usuario.nome : "Síndico do condomínio"}</div>

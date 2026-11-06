@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { ICON_DATA_URI } from "../lib/logo";
 
 export const metadata: Metadata = {
   title: "CondoFree — Gestão de condomínios",
@@ -10,8 +11,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href={ICON_DATA_URI} sizes="any" />
+        <link rel="apple-touch-icon" href={ICON_DATA_URI} />
       </head>
       <body>{children}</body>
     </html>
