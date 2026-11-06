@@ -58,8 +58,8 @@ header .container{width:min(1400px,calc(100% - 56px))}
 /* HERO */
 .hero{padding:0 0 64px;background:linear-gradient(180deg,#e8effc 0%,#f4f8ff 55%,#ffffff 100%);color:var(--ink);border-bottom:1px solid var(--line)}
 .hero-banner{position:relative;width:100vw;margin-left:calc(50% - 50vw);border-radius:0;overflow:hidden;border:0;box-shadow:none;min-height:560px;display:flex;align-items:center;background:#dbe6f5}
-.hero-banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:72% center;display:block}
-.hero-banner-scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.9) 40%,rgba(255,255,255,.5) 60%,rgba(255,255,255,.08) 78%)}
+.hero-banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:80% center;display:block}
+.hero-banner-scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.92) 32%,rgba(255,255,255,.55) 46%,rgba(255,255,255,0) 62%)}
 .hero-banner-texto{position:relative;z-index:2;padding:56px 48px;margin-left:max(0px,calc((100vw - 1180px)/2 - 24px));max-width:660px;text-align:left}
 .hero-eyebrow{font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-dark);margin:0 0 12px}
 .hero-banner-texto h1{font-size:clamp(33px,5vw,60px);font-weight:800;margin:0 0 16px;color:var(--navy);line-height:1.04;letter-spacing:-.025em;text-transform:uppercase}
@@ -73,7 +73,8 @@ header .container{width:min(1400px,calc(100% - 56px))}
 @media(max-width:560px){.hero-actions .btn{width:100%;white-space:normal}}
 .hero-micro{display:flex;flex-wrap:wrap;gap:10px 20px;font-size:15px;color:var(--ink2);font-weight:700;line-height:1.45}
 .hero-micro span{display:flex;gap:7px;align-items:center} .check{color:var(--brand);font-weight:800;font-size:17px}
-@media(max-width:900px){.hero{padding:0 0 48px}.hero-banner{min-height:0;display:block;border-radius:0}.hero-banner img{position:relative;height:280px;object-position:68% 25%}.hero-banner-scrim{display:none}.hero-banner-texto{padding:28px 24px 36px;background:#f4f8ff;margin-left:0}.hero-banner-texto h1{font-size:clamp(30px,8.5vw,44px)}}
+@media(max-width:1250px){.hero-banner-texto{max-width:580px}.hero-banner img{object-position:84% center}}
+@media(max-width:900px){.hero{padding:0 0 48px}.hero-banner{min-height:500px;display:flex;align-items:center}.hero-banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:82% 20%}.hero-banner-texto{padding:40px 24px;margin-left:0;max-width:520px;background:transparent}.hero-banner-texto h1{font-size:clamp(30px,8.5vw,44px)}}
 
 
 /* PAIN */
