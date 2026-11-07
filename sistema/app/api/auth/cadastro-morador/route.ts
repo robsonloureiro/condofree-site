@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { listarUsuarios, salvarUsuarios, hashSenha, criarSessao, definirCookieSessao, novoId, hojeISO } from "@/lib/auth";
 import { listarCondominios, carregarDados, salvarDados } from "@/lib/dados";
+import { enviarBoasVindasMorador } from "@/lib/email";
 import type { Usuario } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
@@ -58,5 +59,13 @@ export async function POST(req: NextRequest) {
   await salvarDados(dados);
   const token = await criarSessao(usuario.id);
   definirCookieSessao(token);
+  // E-mail de boas-vindas (não trava o cadastro se falhar).
+  await enviarBoasVindasMorador({
+    to: usuario.email,
+    nome: usuario.nome,
+    condominio: condominio.nome,
+    bloco: String(bloco),
+    apartamento: String(apartamento),
+  });
   return Response.json({ ok: true });
 }

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { listarUsuarios, salvarUsuarios, hashSenha, criarSessao, definirCookieSessao, novoId, hojeISO } from "@/lib/auth";
 import { listarCondominios, salvarCondominios, salvarDados } from "@/lib/dados";
+import { enviarBoasVindasSindico } from "@/lib/email";
 import type { DadosCondominio, Usuario } from "@/lib/types";
 
 function codigoConvite(): string {
@@ -69,5 +70,13 @@ export async function POST(req: NextRequest) {
   await salvarDados(dados);
   const token = await criarSessao(usuario.id);
   definirCookieSessao(token);
+  // E-mail de boas-vindas (não trava o cadastro se falhar).
+  await enviarBoasVindasSindico({
+    to: usuario.email,
+    nome: usuario.nome,
+    condominio: condominio.nome,
+    codigoConvite: condominio.codigoConvite,
+    trialFim: condominio.trialFim,
+  });
   return Response.json({ ok: true, codigoConvite: condominio.codigoConvite });
 }

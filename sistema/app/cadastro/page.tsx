@@ -100,7 +100,7 @@ export default function Cadastro() {
         <img src={LOGO_DATA_URI} alt="CondoFree" />
         <h1 style={{ color: "#0b2a4a", margin: "8px 0 0" }}>Criar sua conta grátis</h1>
         <p style={{ color: "#5b6b7d", marginTop: 4 }}>
-          Sem e-mail de confirmação: sua conta já nasce ativa. Depois é só entrar com o mesmo e-mail e senha.
+          Sua conta já nasce ativa e você recebe um e-mail de boas-vindas da CondoFree. Depois é só entrar com o mesmo e-mail e senha.
         </p>
       </div>
 
