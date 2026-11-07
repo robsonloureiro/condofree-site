@@ -391,6 +391,20 @@ function AvisosTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: Tab
 }
 
 function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: TabProps) {
+  // Fotos antigas foram salvas como blob privado (URL com ?download=1) e
+  // quebram no <img>; essas passam pelo proxy /api/foto. Fotos novas já
+  // são públicas e carregam direto.
+  function srcFoto(url: string) {
+    try {
+      const u = new URL(url);
+      if (u.searchParams.get("download") === "1") {
+        return `/api/foto?u=${encodeURIComponent(url)}`;
+      }
+    } catch {
+      // url inválida: deixa como está
+    }
+    return url;
+  }
   const [fotoUrl, setFotoUrl] = useState("");
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   async function enviarFoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -436,7 +450,7 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
           <p style={{ color: "#5b6b7d" }}>{o.local} · por {o.moradorNome}</p>
           {o.fotoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={o.fotoUrl} alt="Foto da ocorrência" style={{ maxWidth: "100%", borderRadius: 12 }} />
+            <img src={srcFoto(o.fotoUrl)} alt="Foto da ocorrência" style={{ maxWidth: "100%", borderRadius: 12 }} />
           )}
           <p>
             {o.status === "aberta" && <span className="etiqueta vermelha">aberta</span>}
