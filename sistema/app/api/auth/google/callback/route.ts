@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   }
   if (!tokens?.access_token) return erro(req, "google-erro");
 
-  let perfil: { email?: string; email_verified?: boolean };
+  let perfil: { email?: string; email_verified?: boolean; name?: string };
   try {
     const r = await fetch(USERINFO_URL, {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
@@ -62,7 +62,16 @@ export async function GET(req: NextRequest) {
 
   const usuarios = await listarUsuarios();
   const usuario = usuarios.find((u) => u.email.toLowerCase() === email);
-  if (!usuario) return erro(req, "google-sem-conta");
+  if (!usuario) {
+    // Sem conta CondoFree com esse e-mail: o botão do Google abre o
+    // cadastro com e-mail e nome já preenchidos — a pessoa só escolhe
+    // se é síndico ou morador e completa os dados do condomínio.
+    // O Google prova quem ela é, mas não sabe se é síndico ou morador
+    // nem qual é o condomínio, por isso o cadastro não some por inteiro.
+    const params = new URLSearchParams({ email });
+    if (perfil?.name) params.set("nome", String(perfil.name));
+    return NextResponse.redirect(new URL(`/cadastro?${params.toString()}`, req.url));
+  }
 
   const token = await criarSessao(usuario.id);
   const res = NextResponse.redirect(new URL("/painel", req.url));

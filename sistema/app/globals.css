@@ -39,6 +39,7 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 .topo img.logo { height: 40px; width: auto; }
 .topo .titulo { font-weight: 800; font-size: 18px; color: var(--navy); }
 .topo .sub { color: var(--muted); font-size: 14px; }
+.topo .quem { color: var(--muted); font-size: 13px; }
 .topo .espaco { flex: 1; }
 .hamburguer {
   display: none;
@@ -283,6 +284,7 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
   .sidebar img.logo { height: 38px; width: auto; max-width: 100%; object-fit: contain; align-self: flex-start; margin-bottom: 4px; }
   .sidebar .side-condominio { font-weight: 800; font-size: 17px; color: var(--navy); }
   .sidebar .side-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+.sidebar .side-quem { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
   .sidebar .side-nav { display: flex; flex-direction: column; gap: 2px; }
   .sidebar .side-nav button {
     display: flex; align-items: center; gap: 10px;

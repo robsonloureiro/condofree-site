@@ -121,6 +121,7 @@ export default function Painel() {
         <div>
           <div className="titulo">{estado.condominio.nome}</div>
           <div className="sub">Síndico: {ehSindico ? usuario.nome : "Síndico do condomínio"}</div>
+          <div className="quem">Logado como {usuario.email} · {ehSindico ? "Síndico" : "Morador"}</div>
         </div>
         <div className="espaco" />
         <span className="selo">{estado.statusAssinatura.texto}</span>
@@ -147,6 +148,7 @@ export default function Painel() {
           <img className="logo" src={LOGO_DATA_URI} alt="CondoFree" />
           <div className="side-condominio">{estado.condominio.nome}</div>
           <div className="side-sub">Síndico: {ehSindico ? usuario.nome : "Síndico do condomínio"}</div>
+          <div className="side-quem">Logado como {usuario.email} · {ehSindico ? "Síndico" : "Morador"}</div>
           <nav className="side-nav">
             {modulosVisiveis.map((m) => (
               <button key={m.id} className={aba === m.id ? "ativo" : ""} onClick={() => irPara(m.id)}>
