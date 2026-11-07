@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listarUsuarios, criarSessao } from "@/lib/auth";
+import { criarPendente } from "@/lib/google-pendente";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
@@ -63,14 +64,13 @@ export async function GET(req: NextRequest) {
   const usuarios = await listarUsuarios();
   const usuario = usuarios.find((u) => u.email.toLowerCase() === email);
   if (!usuario) {
-    // Sem conta CondoFree com esse e-mail: o botão do Google abre o
-    // cadastro com e-mail e nome já preenchidos — a pessoa só escolhe
-    // se é síndico ou morador e completa os dados do condomínio.
-    // O Google prova quem ela é, mas não sabe se é síndico ou morador
-    // nem qual é o condomínio, por isso o cadastro não some por inteiro.
-    const params = new URLSearchParams({ email });
-    if (perfil?.name) params.set("nome", String(perfil.name));
-    return NextResponse.redirect(new URL(`/cadastro?${params.toString()}`, req.url));
+    // Sem conta CondoFree com esse e-mail: o Google prova quem a pessoa
+    // é, e ela completa o cadastro SEM senha na tela /completar-cadastro
+    // (síndico: nome do condomínio + unidades; morador: código, bloco e
+    // apartamento — o nome do condomínio aparece ao digitar o código).
+    // O token pendente expira em 15 minutos e só vale uma vez.
+    const token = await criarPendente(email, String(perfil?.name || ""));
+    return NextResponse.redirect(new URL(`/completar-cadastro?token=${token}`, req.url));
   }
 
   const token = await criarSessao(usuario.id);

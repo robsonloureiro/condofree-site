@@ -17,20 +17,16 @@ export async function POST(req: NextRequest) {
   }
   const ext = (arquivo.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
   const nome = `fotos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  // A foto precisa ser pública: o <img> do painel não consegue autenticar
-  // num blob privado, e a foto aparecia quebrada. O nome tem sufixo
-  // aleatório, então a URL não é adivinhável.
+  // O store do Blob é PRIVADO e rejeita upload público ("Cannot use public
+  // access on a private store"). A foto fica privada e é servida pelo
+  // proxy /api/foto, que busca o arquivo com o token no servidor — o
+  // painel usa o proxy para URLs com ?download=1 (ver srcFoto).
   let blob;
   try {
-    blob = await put(nome, arquivo, { access: "public", addRandomSuffix: true });
+    blob = await put(nome, arquivo, { access: "private", addRandomSuffix: true });
   } catch (e) {
-    // TEMPORÁRIO (diagnóstico 07/11): devolver o motivo do erro para
-    // descobrir por que o put falha em produção. Remover após o diagnóstico.
     console.error("upload foto falhou:", e);
-    return Response.json(
-      { ok: false, erro: "Falha no envio.", detalhe: String((e as Error)?.message || e) },
-      { status: 500 },
-    );
+    return Response.json({ ok: false, erro: "Falha no envio da foto. Tente novamente." }, { status: 500 });
   }
-  return Response.json({ ok: true, url: blob.url });
+  return Response.json({ ok: true, url: blob.downloadUrl });
 }
