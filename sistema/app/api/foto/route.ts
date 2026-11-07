@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { usuarioDaSessao } from "@/lib/auth";
 
-// Serve fotos de ocorrências antigas, que foram salvas como blob privado
-// (a URL guardada termina em ?download=1). O <img> não autentica, então
-// o servidor busca o arquivo com o token do Blob e devolve os bytes.
-// Só aceita URLs do Blob da Vercel e só para usuário logado.
+// Serve fotos de ocorrências, que ficam no Blob PRIVADO (a URL guardada
+// termina em ?download=1). O <img> não autentica, então o servidor
+// busca o arquivo com o token do Blob e devolve os bytes. Só aceita
+// URLs do Blob da Vercel (host público ou privado) e só para usuário logado.
 export async function GET(req: NextRequest) {
   const usuario = await usuarioDaSessao();
   if (!usuario) {
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   } catch {
     return new Response("URL inválida.", { status: 400 });
   }
-  if (url.protocol !== "https:" || !url.hostname.endsWith(".public.blob.vercel-storage.com")) {
+  if (url.protocol !== "https:" || !url.hostname.endsWith(".blob.vercel-storage.com")) {
     return new Response("URL não permitida.", { status: 400 });
   }
   url.searchParams.delete("download");

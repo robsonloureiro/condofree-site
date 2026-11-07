@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { usuarioDaSessao, listarUsuarios, salvarUsuarios, novoId } from "@/lib/auth";
 import { carregarDados, salvarDados, podeCriar, erroCriacaoBloqueada, listarCondominios, salvarCondominios } from "@/lib/dados";
 import { hojeISO, dataBR, brl } from "@/lib/store";
+import { enviarPushParaCondominio, enviarPushParaUsuarios } from "@/lib/push";
 import type { DadosCondominio } from "@/lib/types";
 
 const PLANOS_MP = {
@@ -92,6 +93,14 @@ export async function POST(req: NextRequest) {
         r.status = "recusada";
       }
       await salvar();
+      // Avisa o morador que fez a reserva (não trava a resposta se falhar).
+      const moradorReserva = dados.moradores.find((m) => m.id === r.moradorId);
+      if (moradorReserva?.usuarioId) {
+        await enviarPushParaUsuarios([moradorReserva.usuarioId], {
+          titulo: r.status === "aprovada" ? "Reserva aprovada ✅" : "Reserva recusada",
+          corpo: `${r.espacoNome} — ${dataBR(r.data)} ${r.inicio} às ${r.fim}.`,
+        });
+      }
       return Response.json({ ok: true });
     }
     case "cancelarReserva": {
@@ -126,6 +135,11 @@ export async function POST(req: NextRequest) {
       if (!args.titulo || !args.texto) return Response.json({ ok: false, erro: "Informe título e texto." }, { status: 400 });
       dados.avisos.unshift({ id: novoId("av"), titulo: String(args.titulo), texto: String(args.texto), criadoEm: hojeISO(), lidoPor: [] });
       await salvar();
+      // Avisa todos os moradores do condomínio (não trava se falhar).
+      await enviarPushParaCondominio(dados.condominio.id, {
+        titulo: `Novo aviso: ${String(args.titulo)}`,
+        corpo: String(args.texto).slice(0, 120),
+      });
       return Response.json({ ok: true });
     }
     case "removerAviso": {
@@ -253,6 +267,12 @@ export async function POST(req: NextRequest) {
         ata: null,
       });
       await salvar();
+      // Avisa todos os moradores do condomínio (não trava se falhar).
+      await enviarPushParaCondominio(dados.condominio.id, {
+        titulo: "Nova votação 🗳️",
+        corpo: String(args.pergunta).slice(0, 120),
+        url: "/painel",
+      });
       return Response.json({ ok: true });
     }
     case "votar": {

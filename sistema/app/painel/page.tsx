@@ -21,6 +21,11 @@ const MODULOS: { id: Aba; rotulo: string; icone: string; papeis: ("sindico" | "m
 
 const WHATS = "https://wa.me/5521991512329";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 function brl(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -399,7 +404,10 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
   function srcFoto(url: string) {
     try {
       const u = new URL(url);
-      if (u.searchParams.get("download") === "1") {
+      // Toda foto do Blob (antiga ou nova, host público ou privado) passa
+      // pelo proxy /api/foto, que busca com o token no servidor — o <img>
+      // sozinho não autentica e a foto privada quebra.
+      if (u.hostname.endsWith(".blob.vercel-storage.com")) {
         return `/api/foto?u=${encodeURIComponent(url)}`;
       }
     } catch {
@@ -1020,6 +1028,150 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
   );
 }
 
+function urlBase64ParaUint8Array(base64: string) {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(b64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+// Instalar o CondoFree como app + ativar notificações. O botão de
+// instalar só aparece quando o navegador oferece (Android/Chrome); no
+// iPhone a instalação é pelo Safari, "Adicionar à Tela de Início".
+function AppENotificacoes() {
+  const [instalado, setInstalado] = useState(false);
+  const [ehIos, setEhIos] = useState(false);
+  const [promptInstalacao, setPromptInstalacao] = useState<BeforeInstallPromptEvent | null>(null);
+  const [notif, setNotif] = useState<"carregando" | "ativo" | "inativo" | "bloqueado" | "sem-suporte">("carregando");
+  const [msg, setMsg] = useState("");
+  const [agindo, setAgindo] = useState(false);
+
+  useEffect(() => {
+    setEhIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
+    setInstalado(
+      window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as unknown as { standalone?: boolean }).standalone === true,
+    );
+    const aoPerguntar = (e: Event) => {
+      e.preventDefault();
+      setPromptInstalacao(e as unknown as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", aoPerguntar);
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setNotif("sem-suporte");
+      return;
+    }
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setNotif(sub ? "ativo" : "inativo"))
+      .catch(() => setNotif("inativo"));
+    return () => window.removeEventListener("beforeinstallprompt", aoPerguntar);
+  }, []);
+
+  async function instalar() {
+    if (promptInstalacao) {
+      promptInstalacao.prompt();
+      const escolha = await promptInstalacao.userChoice;
+      if (escolha.outcome === "accepted") setInstalado(true);
+      setPromptInstalacao(null);
+      return;
+    }
+    if (ehIos) {
+      setMsg("No iPhone: toque no botão Compartilhar do Safari e depois em “Adicionar à Tela de Início”.");
+      return;
+    }
+    setMsg("No menu do navegador, procure “Instalar app” ou “Adicionar à tela inicial”.");
+  }
+
+  async function alternarNotificacoes() {
+    setMsg("");
+    setAgindo(true);
+    try {
+      if (notif === "ativo") {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await sub.unsubscribe();
+          await fetch("/api/push/desinscrever", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+        }
+        setNotif("inativo");
+        return;
+      }
+      const chave = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!chave) {
+        setMsg("As notificações ainda estão sendo ligadas no servidor. Tente de novo em instantes.");
+        return;
+      }
+      const permissao = await Notification.requestPermission();
+      if (permissao !== "granted") {
+        setNotif("bloqueado");
+        setMsg("Você bloqueou as notificações. Para ativar, libere nas configurações do navegador, no cadeado ao lado do endereço.");
+        return;
+      }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ParaUint8Array(chave),
+      });
+      const res = await fetch("/api/push/inscrever", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON() }),
+      });
+      const d = await res.json();
+      if (!d.ok) {
+        setMsg(d.erro || "Não foi possível ativar as notificações.");
+        return;
+      }
+      setNotif("ativo");
+    } catch {
+      setMsg("Não foi possível ativar as notificações neste aparelho. Tente de novo.");
+    } finally {
+      setAgindo(false);
+    }
+  }
+
+  return (
+    <div className="cartao" style={{ marginTop: 16 }}>
+      <h2>📱 App e notificações</h2>
+      <p>
+        {instalado
+          ? "O CondoFree já está instalado como app neste aparelho."
+          : "Instale o CondoFree na tela inicial: abre em tela cheia, como aplicativo, sem baixar nada da loja."}
+      </p>
+      {!instalado && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="btn" onClick={instalar}>Instalar app</button>
+        </div>
+      )}
+      <h3 style={{ marginTop: 16 }}>Notificações</h3>
+      <p>
+        {notif === "ativo"
+          ? "Notificações ativadas neste aparelho: você recebe aviso quando o síndico criar votação ou aviso, e quando sua reserva for respondida."
+          : notif === "bloqueado"
+            ? "As notificações estão bloqueadas neste navegador."
+            : notif === "sem-suporte"
+              ? "Este navegador não suporta notificações do CondoFree."
+              : "Ative para receber aviso quando o síndico criar votação ou aviso, e quando sua reserva for respondida."}
+      </p>
+      {(notif === "ativo" || notif === "inativo" || notif === "bloqueado") && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="btn" onClick={alternarNotificacoes} disabled={agindo}>
+            {agindo ? "Aguarde..." : notif === "ativo" ? "Desativar notificações" : "Ativar notificações"}
+          </button>
+        </div>
+      )}
+      {msg && <p style={{ color: "#5b6b7d", marginTop: 8 }}>{msg}</p>}
+    </div>
+  );
+}
+
 function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuporte: (s: string) => void }) {
   return (
     <div>
@@ -1047,6 +1199,7 @@ function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuport
           <button className="btn" onClick={() => abrirSuporte("Tenho uma dúvida sobre o CondoFree.")}>Falar no WhatsApp</button>
         </div>
       </div>
+      <AppENotificacoes />
     </div>
   );
 }
