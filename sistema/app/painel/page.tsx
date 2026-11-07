@@ -409,16 +409,24 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
   }
   const [fotoUrl, setFotoUrl] = useState("");
   const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [erroFoto, setErroFoto] = useState("");
   async function enviarFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
     if (!arquivo) return;
     setEnviandoFoto(true);
-    const fd = new FormData();
-    fd.append("foto", arquivo);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    const d = await res.json();
-    setEnviandoFoto(false);
-    if (d.ok) setFotoUrl(d.url);
+    setErroFoto("");
+    try {
+      const fd = new FormData();
+      fd.append("foto", arquivo);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const d = await res.json();
+      if (d.ok) setFotoUrl(d.url);
+      else setErroFoto(d.erro || "Não foi possível enviar a foto. Tente novamente.");
+    } catch {
+      setErroFoto("Não foi possível enviar a foto. Tente novamente.");
+    } finally {
+      setEnviandoFoto(false);
+    }
   }
   return (
     <div>
@@ -440,6 +448,7 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
             <label>Foto (opcional)</label>
             <input type="file" accept="image/*" onChange={enviarFoto} />
             {enviandoFoto && <p>Enviando foto...</p>}
+            {erroFoto && <p style={{ color: "#b91c1c" }}>{erroFoto}</p>}
             {fotoUrl && <p style={{ color: "#166534" }}>Foto anexada ✓</p>}
           </div>
           <button className="btn" type="submit">Registrar ocorrência</button>

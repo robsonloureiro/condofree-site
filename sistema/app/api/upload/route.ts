@@ -20,6 +20,17 @@ export async function POST(req: NextRequest) {
   // A foto precisa ser pública: o <img> do painel não consegue autenticar
   // num blob privado, e a foto aparecia quebrada. O nome tem sufixo
   // aleatório, então a URL não é adivinhável.
-  const blob = await put(nome, arquivo, { access: "public", addRandomSuffix: true });
+  let blob;
+  try {
+    blob = await put(nome, arquivo, { access: "public", addRandomSuffix: true });
+  } catch (e) {
+    // TEMPORÁRIO (diagnóstico 07/11): devolver o motivo do erro para
+    // descobrir por que o put falha em produção. Remover após o diagnóstico.
+    console.error("upload foto falhou:", e);
+    return Response.json(
+      { ok: false, erro: "Falha no envio.", detalhe: String((e as Error)?.message || e) },
+      { status: 500 },
+    );
+  }
   return Response.json({ ok: true, url: blob.url });
 }
