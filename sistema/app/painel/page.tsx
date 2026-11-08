@@ -343,6 +343,7 @@ export default function Painel() {
         </div>
       </div>
 
+      <BannerInstalar />
       <nav className="barra-inferior">
         {principais.map((id) => {
           const m = MODULOS.find((x) => x.id === id)!;
@@ -381,12 +382,15 @@ function ReservasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: T
   }
   return (
     <div>
-      <div className="cartao">
-        <h2>📅 Reservas de espaços</h2>
-        <p>Reserve o salão, a churrasqueira e outros espaços do condomínio, sem conflito de horário.</p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-azul">📅</span>
+        <div>
+          <h2>Reservas de espaços</h2>
+          <p>Reserve o salão, a churrasqueira e outros espaços do condomínio, sem conflito de horário.</p>
+        </div>
       </div>
       <div className="cartao">
-        <h3>Nova reserva</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-verde pequeno">📅</span><h3>Nova reserva</h3></div>
         <form onSubmit={reservar}>
           <div className="campo">
             <label>Espaço</label>
@@ -413,17 +417,20 @@ function ReservasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: T
       </div>
       {ehSindico && (
         <div className="cartao">
-          <h3>Espaços do condomínio</h3>
+          <div className="cartao-titulo"><span className="chip-icone chip-azul pequeno">🏢</span><h3>Espaços do condomínio</h3></div>
           {estado.espacos.map((e: any) => (
-            <p key={e.id}>
-              {e.nome}{" "}
-              <button className="btn secundario pequeno" onClick={async () => {
-                if (confirm(`Excluir ${e.nome}? As reservas futuras dele serão canceladas.`)) {
-                  const d = await acao("removerEspaco", { id: e.id });
-                  if (d?.ok) setOk("Espaço removido.");
-                }
-              }}>Excluir</button>
-            </p>
+            <div key={e.id} className="item-lista">
+              <span className="chip-icone chip-azul pequeno">🏢</span>
+              <div className="item-lista-corpo"><strong>{e.nome}</strong></div>
+              <div className="item-lista-lado">
+                <button className="btn secundario pequeno" onClick={async () => {
+                  if (confirm(`Excluir ${e.nome}? As reservas futuras dele serão canceladas.`)) {
+                    const d = await acao("removerEspaco", { id: e.id });
+                    if (d?.ok) setOk("Espaço removido.");
+                  }
+                }}>Excluir</button>
+              </div>
+            </div>
           ))}
           <div className="linha">
             <div className="campo"><label>Novo espaço</label><input {...campo("novoEspaco")} placeholder="Ex.: Academia" /></div>
@@ -435,25 +442,31 @@ function ReservasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: T
         </div>
       )}
       <div className="cartao">
-        <h3>Reservas</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-azul pequeno">📅</span><h3>Reservas</h3></div>
         {estado.reservas.length === 0 && <p>Nenhuma reserva ainda.</p>}
         {estado.reservas.map((r: any) => (
-          <div key={r.id} style={{ borderBottom: "1px solid #dde5ee", padding: "8px 0" }}>
-            <strong>{r.espacoNome}</strong> — {dataBR(r.data)} {r.inicio} às {r.fim} · {r.moradorNome}{" "}
-            {r.status === "pendente" && <span className="etiqueta amber">pendente</span>}
-            {r.status === "aprovada" && <span className="etiqueta verde">aprovada</span>}
-            {r.status === "recusada" && <span className="etiqueta vermelha">recusada</span>}
-            {r.status === "cancelada" && <span className="etiqueta cinza">cancelada</span>}
-            <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
-              {ehSindico && r.status === "pendente" && (
-                <>
-                  <button className="btn pequeno" onClick={() => acao("aprovarReserva", { id: r.id, aprovar: true })}>Aprovar</button>
-                  <button className="btn perigo pequeno" onClick={() => acao("aprovarReserva", { id: r.id, aprovar: false })}>Recusar</button>
-                </>
-              )}
-              {(ehSindico || r.moradorId === estado.eu?.id) && r.status !== "cancelada" && (
-                <button className="btn secundario pequeno" onClick={() => acao("cancelarReserva", { id: r.id })}>Cancelar</button>
-              )}
+          <div key={r.id} className="item-lista">
+            <span className={`chip-icone pequeno ${r.status === "aprovada" ? "chip-verde" : r.status === "pendente" ? "chip-amarela" : r.status === "recusada" ? "chip-rosa" : "chip-cinza"}`}>📅</span>
+            <div className="item-lista-corpo">
+              <strong>{r.espacoNome}</strong>
+              <div className="item-meta">{dataBR(r.data)} · {r.inicio} às {r.fim} · {r.moradorNome}</div>
+            </div>
+            <div className="item-lista-lado">
+              {r.status === "pendente" && <span className="etiqueta amber">pendente</span>}
+              {r.status === "aprovada" && <span className="etiqueta verde">aprovada</span>}
+              {r.status === "recusada" && <span className="etiqueta vermelha">recusada</span>}
+              {r.status === "cancelada" && <span className="etiqueta cinza">cancelada</span>}
+              <div className="item-lista-acoes">
+                {ehSindico && r.status === "pendente" && (
+                  <>
+                    <button className="btn pequeno" onClick={() => acao("aprovarReserva", { id: r.id, aprovar: true })}>Aprovar</button>
+                    <button className="btn perigo pequeno" onClick={() => acao("aprovarReserva", { id: r.id, aprovar: false })}>Recusar</button>
+                  </>
+                )}
+                {(ehSindico || r.moradorId === estado.eu?.id) && r.status !== "cancelada" && (
+                  <button className="btn secundario pequeno" onClick={() => acao("cancelarReserva", { id: r.id })}>Cancelar</button>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -465,13 +478,16 @@ function ReservasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: T
 function AvisosTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: TabProps) {
   return (
     <div>
-      <div className="cartao">
-        <h2>📢 Mural de avisos</h2>
-        <p>Os avisos do síndico ficam aqui, sempre à vista. Marque que leu para o síndico saber.</p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-rosa">📢</span>
+        <div>
+          <h2>Mural de avisos</h2>
+          <p>Os avisos do síndico ficam aqui, sempre à vista. Marque que leu para o síndico saber.</p>
+        </div>
       </div>
       {ehSindico && (
         <div className="cartao">
-          <h3>Novo aviso</h3>
+          <div className="cartao-titulo"><span className="chip-icone chip-rosa pequeno">📢</span><h3>Novo aviso</h3></div>
           <form onSubmit={async (e) => {
             e.preventDefault();
             const d = await acao("criarAviso", { titulo: form.tituloAviso, texto: form.textoAviso });
@@ -486,22 +502,27 @@ function AvisosTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: Tab
       {estado.avisos.map((a: any) => {
         const euLi = estado.eu && a.lidoPor.includes(estado.eu.id);
         return (
-          <div key={a.id} className="cartao">
-            <h3>{a.titulo}</h3>
-            <p>{a.texto}</p>
-            <p style={{ color: "#5b6b7d", fontSize: 14 }}>
-              {a.lidoPor.length} morador(es) leram
-              {ehSindico && a.lidoPor.length > 0 && (
-                <>: {a.lidoPor.map((id: string) => estado.moradores.find((m: any) => m.id === id)?.nome).filter(Boolean).join(", ")}</>
+          <div key={a.id} className="item-lista">
+            <span className="chip-icone chip-rosa pequeno">📢</span>
+            <div className="item-lista-corpo">
+              <strong>{a.titulo}</strong>
+              <div>{a.texto}</div>
+              <div className="item-meta">
+                {a.lidoPor.length} morador(es) leram
+                {ehSindico && a.lidoPor.length > 0 && (
+                  <>: {a.lidoPor.map((id: string) => estado.moradores.find((m: any) => m.id === id)?.nome).filter(Boolean).join(", ")}</>
+                )}
+              </div>
+            </div>
+            <div className="item-lista-lado">
+              {!ehSindico && !euLi && (
+                <button className="btn pequeno" onClick={() => acao("marcarLido", { avisoId: a.id })}>Li o aviso ✓</button>
               )}
-            </p>
-            {!ehSindico && !euLi && (
-              <button className="btn pequeno" onClick={() => acao("marcarLido", { avisoId: a.id })}>Li o aviso ✓</button>
-            )}
-            {!ehSindico && euLi && <span className="etiqueta verde">Você já leu ✓</span>}
-            {ehSindico && (
-              <button className="btn perigo pequeno" onClick={() => acao("removerAviso", { id: a.id })}>Remover</button>
-            )}
+              {!ehSindico && euLi && <span className="etiqueta verde">Você já leu ✓</span>}
+              {ehSindico && (
+                <button className="btn perigo pequeno" onClick={() => acao("removerAviso", { id: a.id })}>Remover</button>
+              )}
+            </div>
           </div>
         );
       })}
@@ -551,12 +572,15 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
   }
   return (
     <div>
-      <div className="cartao">
-        <h2>🔧 Ocorrências</h2>
-        <p>Avise o síndico sobre algo que precisa de reparo, com foto e local. Acompanhe o status aqui.</p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-laranja">🔧</span>
+        <div>
+          <h2>Ocorrências</h2>
+          <p>Avise o síndico sobre algo que precisa de reparo, com foto e local. Acompanhe o status aqui.</p>
+        </div>
       </div>
       <div className="cartao">
-        <h3>Nova ocorrência</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-laranja pequeno">🔧</span><h3>Nova ocorrência</h3></div>
         <form onSubmit={async (e) => {
           e.preventDefault();
           const d = await acao("criarOcorrencia", { titulo: form.tituloOc, descricao: form.descOc, local: form.localOc, fotoUrl });
@@ -576,25 +600,28 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
         </form>
       </div>
       {estado.ocorrencias.map((o: any) => (
-        <div key={o.id} className="cartao">
-          <h3>{o.titulo}</h3>
-          <p>{o.descricao}</p>
-          <p style={{ color: "#5b6b7d" }}>{o.local} · por {o.moradorNome}</p>
-          {o.fotoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={srcFoto(o.fotoUrl)} alt="Foto da ocorrência" style={{ maxWidth: "100%", borderRadius: 12 }} />
-          )}
-          <p>
+        <div key={o.id} className="item-lista">
+          <span className={`chip-icone pequeno ${o.status === "resolvida" ? "chip-verde" : o.status === "em_andamento" ? "chip-amarela" : "chip-rosa"}`}>🔧</span>
+          <div className="item-lista-corpo">
+            <strong>{o.titulo}</strong>
+            <div>{o.descricao}</div>
+            <div className="item-meta">{o.local} · por {o.moradorNome}</div>
+            {o.fotoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={srcFoto(o.fotoUrl)} alt="Foto da ocorrência" className="foto" />
+            )}
+          </div>
+          <div className="item-lista-lado">
             {o.status === "aberta" && <span className="etiqueta vermelha">aberta</span>}
             {o.status === "em_andamento" && <span className="etiqueta amber">em andamento</span>}
             {o.status === "resolvida" && <span className="etiqueta verde">resolvida</span>}
-          </p>
-          {ehSindico && o.status !== "resolvida" && (
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn pequeno" onClick={() => acao("mudarStatusOcorrencia", { id: o.id, status: "em_andamento" })}>Em andamento</button>
-              <button className="btn pequeno" onClick={() => acao("mudarStatusOcorrencia", { id: o.id, status: "resolvida" })}>Resolver</button>
-            </div>
-          )}
+            {ehSindico && o.status !== "resolvida" && (
+              <div className="item-lista-acoes">
+                <button className="btn pequeno" onClick={() => acao("mudarStatusOcorrencia", { id: o.id, status: "em_andamento" })}>Em andamento</button>
+                <button className="btn pequeno" onClick={() => acao("mudarStatusOcorrencia", { id: o.id, status: "resolvida" })}>Resolver</button>
+              </div>
+            )}
+          </div>
         </div>
       ))}
       {estado.ocorrencias.length === 0 && <div className="cartao"><p>Nenhuma ocorrência ainda.</p></div>}
@@ -605,14 +632,17 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
 function BoletosTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: TabProps) {
   return (
     <div>
-      <div className="cartao">
-        <h2>🧾 Boletos</h2>
-        <p>2ª via do boleto do condomínio, sempre aqui.</p>
-        <p style={{ color: "#5b6b7d", fontSize: 14 }}>O CondoFree não recebe o valor do boleto. O pagamento vai direto para a conta do condomínio.</p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-roxa">🧾</span>
+        <div>
+          <h2>Boletos</h2>
+          <p>2ª via do boleto do condomínio, sempre aqui.</p>
+        </div>
       </div>
+      <p style={{ color: "#5b6b7d", fontSize: 14, margin: "-8px 0 16px 66px" }}>O CondoFree não recebe o valor do boleto. O pagamento vai direto para a conta do condomínio.</p>
       {ehSindico && (
         <div className="cartao">
-          <h3>Gerar boletos do mês</h3>
+          <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">🧾</span><h3>Gerar boletos do mês</h3></div>
           <form onSubmit={async (e) => {
             e.preventDefault();
             const d = await acao("gerarBoletosMes", { mes: form.mesBoleto || new Date().toISOString().slice(0, 7), valor: Number(form.valorBoleto) });
@@ -627,20 +657,23 @@ function BoletosTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: Ta
         </div>
       )}
       {estado.boletos.map((b: any) => (
-        <div key={b.id} className="cartao">
-          <h3>{b.moradorNome} — {brl(b.valor)}</h3>
-          <p>Vencimento: {dataBR(b.vencimento)}</p>
-          <p>
+        <div key={b.id} className="item-lista">
+          <span className={`chip-icone pequeno ${b.status === "pago" ? "chip-verde" : b.status === "pendente" ? "chip-amarela" : "chip-rosa"}`}>🧾</span>
+          <div className="item-lista-corpo">
+            <strong>{b.moradorNome} — {brl(b.valor)}</strong>
+            <div className="item-meta">Vencimento: {dataBR(b.vencimento)}</div>
+            {b.codigoBarras && <div className="item-meta" style={{ wordBreak: "break-all" }}>Código de barras: {b.codigoBarras}</div>}
+          </div>
+          <div className="item-lista-lado">
             {b.status === "pago" && <span className="etiqueta verde">pago</span>}
             {b.status === "pendente" && <span className="etiqueta amber">pendente</span>}
             {b.status === "vencido" && <span className="etiqueta vermelha">vencido</span>}
-          </p>
-          {b.codigoBarras && <p style={{ fontSize: 13, wordBreak: "break-all" }}>Código de barras: {b.codigoBarras}</p>}
-          {ehSindico && (
-            <button className="btn pequeno" onClick={() => acao("alternarStatusBoleto", { id: b.id })}>
-              {b.status === "pago" ? "Voltar para pendente" : "Marcar como pago"}
-            </button>
-          )}
+            {ehSindico && (
+              <button className="btn pequeno" onClick={() => acao("alternarStatusBoleto", { id: b.id })}>
+                {b.status === "pago" ? "Voltar para pendente" : "Marcar como pago"}
+              </button>
+            )}
+          </div>
         </div>
       ))}
       {estado.boletos.length === 0 && <div className="cartao"><p>Nenhum boleto ainda.</p></div>}
@@ -682,39 +715,51 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
   if (!ehSindico) {
     return (
       <div>
-        <div className="cartao">
-          <h2>💰 Financeiro</h2>
-          <p>Resumo do mês para os moradores:</p>
-          <p>Entradas: <strong>{brl(estado.resumoFinanceiro.entradas)}</strong></p>
-          <p>Saídas: <strong>{brl(estado.resumoFinanceiro.saidas)}</strong></p>
-          <p>Saldo: <strong>{brl(estado.resumoFinanceiro.saldo)}</strong></p>
-          <p style={{ color: "#5b6b7d", fontSize: 14 }}>O detalhamento completo é apresentado pelo síndico na assembleia.</p>
+        <div className="tab-cabecalho">
+          <span className="chip-icone chip-verde">💰</span>
+          <div>
+            <h2>Financeiro</h2>
+            <p>Resumo do mês para os moradores.</p>
+          </div>
         </div>
+        <div className="home-resumo">
+          <div className="home-resumo-grade">
+            <div className="home-resumo-item"><span className="icone acao-verde">💰</span><span><span className="num" style={{ color: "#166534" }}>{brl(estado.resumoFinanceiro.entradas)}</span><br /><span className="rot">entradas</span></span></div>
+            <div className="home-resumo-item"><span className="icone acao-laranja">💸</span><span><span className="num" style={{ color: "#b91c1c" }}>{brl(estado.resumoFinanceiro.saidas)}</span><br /><span className="rot">saídas</span></span></div>
+            <div className="home-resumo-item"><span className="icone acao-azul">📊</span><span><span className="num">{brl(estado.resumoFinanceiro.saldo)}</span><br /><span className="rot">saldo</span></span></div>
+          </div>
+        </div>
+        <p style={{ color: "#5b6b7d", fontSize: 14 }}>O detalhamento completo é apresentado pelo síndico na assembleia.</p>
       </div>
     );
   }
   return (
     <>
     <div className="tela-only">
-      <div className="cartao">
-        <h2>💰 Financeiro — contabilidade simples</h2>
-        <p>O CondoFree não recebe o valor do boleto. O dinheiro é do condomínio.</p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-verde">💰</span>
+        <div>
+          <h2>Financeiro — contabilidade simples</h2>
+          <p>O CondoFree não recebe o valor do boleto. O dinheiro é do condomínio.</p>
+        </div>
       </div>
       <div className="cartao">
         <div className="campo">
           <label>Mês</label>
           <input type="month" value={mes} onChange={(e) => setMes(e.target.value)} />
         </div>
-        <div className="cards">
-          <div className="cartao"><div className="resumo-numero" style={{ color: "#166534" }}>{brl(entradas)}</div><div className="resumo-rotulo">entradas pagas</div></div>
-          <div className="cartao"><div className="resumo-numero" style={{ color: "#b91c1c" }}>{brl(saidas)}</div><div className="resumo-rotulo">saídas pagas</div></div>
-          <div className="cartao"><div className="resumo-numero">{brl(entradas - saidas)}</div><div className="resumo-rotulo">saldo do mês</div></div>
+        <div className="home-resumo-grade">
+          <div className="home-resumo-item"><span className="icone acao-verde">💰</span><span><span className="num" style={{ color: "#166534" }}>{brl(entradas)}</span><br /><span className="rot">entradas pagas</span></span></div>
+          <div className="home-resumo-item"><span className="icone acao-laranja">💸</span><span><span className="num" style={{ color: "#b91c1c" }}>{brl(saidas)}</span><br /><span className="rot">saídas pagas</span></span></div>
+          <div className="home-resumo-item"><span className="icone acao-azul">📊</span><span><span className="num">{brl(entradas - saidas)}</span><br /><span className="rot">saldo do mês</span></span></div>
         </div>
-        <button className="btn" onClick={baixarPrestacao}>Baixar prestação de contas</button>{" "}
-        <button className="btn secundario" onClick={() => window.open(`/painel/imprimir?mes=${mes}`, "_blank")}>Imprimir</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          <button className="btn" onClick={baixarPrestacao}>Baixar prestação de contas</button>
+          <button className="btn secundario" onClick={() => window.open(`/painel/imprimir?mes=${mes}`, "_blank")}>Imprimir</button>
+        </div>
       </div>
       <div className="cartao">
-        <h3>Novo lançamento</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-verde pequeno">➕</span><h3>Novo lançamento</h3></div>
         <form onSubmit={async (e) => {
           e.preventDefault();
           const d = await acao("criarLancamento", { tipo: form.tipoLan || "despesa", categoria: form.categoriaLan, descricao: form.descLan, valor: Number(form.valorLan), data: form.dataLan, pago: form.pagoLan !== "nao" });
@@ -760,21 +805,29 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
         </form>
       </div>
       <div className="cartao">
-        <h3>Lançamentos de {mes}</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-azul pequeno">📋</span><h3>Lançamentos de {mes}</h3></div>
         {lancamentos.length === 0 && <p>Nenhum lançamento neste mês.</p>}
         {lancamentos.map((l: any) => (
-          <div key={l.id} style={{ borderBottom: "1px solid #dde5ee", padding: "8px 0" }}>
-            <strong>{l.descricao}</strong> — {brl(l.valor)} · {l.categoria} · {dataBR(l.data)}{" "}
-            {l.pago ? <span className="etiqueta verde">pago</span> : <span className="etiqueta amber">pendente</span>}
-            {l.origem === "boleto" && <span className="etiqueta cinza">boleto</span>}
-            {l.origem === "folha" && <span className="etiqueta cinza">folha</span>}
-            <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
-              <button className="btn secundario pequeno" onClick={() => acao("marcarLancamentoPago", { id: l.id, pago: !l.pago })}>
-                {l.pago ? "Marcar pendente" : "Marcar pago"}
-              </button>
-              {l.origem !== "boleto" && (
-                <button className="btn perigo pequeno" onClick={() => acao("removerLancamento", { id: l.id })}>Remover</button>
-              )}
+          <div key={l.id} className="item-lista">
+            <span className={`chip-icone pequeno ${l.tipo === "receita" ? "chip-verde" : "chip-laranja"}`}>{l.tipo === "receita" ? "💰" : "🧾"}</span>
+            <div className="item-lista-corpo">
+              <strong>{l.descricao}</strong>
+              <div className="item-meta">{brl(l.valor)} · {l.categoria} · {dataBR(l.data)}</div>
+            </div>
+            <div className="item-lista-lado">
+              <div className="item-lista-acoes">
+                {l.pago ? <span className="etiqueta verde">pago</span> : <span className="etiqueta amber">pendente</span>}
+                {l.origem === "boleto" && <span className="etiqueta cinza">boleto</span>}
+                {l.origem === "folha" && <span className="etiqueta cinza">folha</span>}
+              </div>
+              <div className="item-lista-acoes">
+                <button className="btn secundario pequeno" onClick={() => acao("marcarLancamentoPago", { id: l.id, pago: !l.pago })}>
+                  {l.pago ? "Marcar pendente" : "Marcar pago"}
+                </button>
+                {l.origem !== "boleto" && (
+                  <button className="btn perigo pequeno" onClick={() => acao("removerLancamento", { id: l.id })}>Remover</button>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -820,13 +873,16 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
 function VotacoesTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: TabProps) {
   return (
     <div>
-      <div className="cartao">
-        <h2>🗳️ Votações</h2>
-        <p>Decisões do condomínio com voto de cada morador e ata ao final.</p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-roxa">🗳️</span>
+        <div>
+          <h2>Votações</h2>
+          <p>Decisões do condomínio com voto de cada morador e ata ao final.</p>
+        </div>
       </div>
       {ehSindico && (
         <div className="cartao">
-          <h3>Nova votação</h3>
+          <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">🗳️</span><h3>Nova votação</h3></div>
           <form onSubmit={async (e) => {
             e.preventDefault();
             const opcoes = [form.opcao1, form.opcao2, form.opcao3].filter(Boolean);
@@ -845,8 +901,12 @@ function VotacoesTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: T
         const euVotei = estado.eu && v.votos.some((x: any) => x.moradorId === estado.eu.id);
         return (
           <div key={v.id} className="cartao">
-            <h3>{v.pergunta}</h3>
-            <p>{v.aberta ? <span className="etiqueta verde">aberta</span> : <span className="etiqueta cinza">encerrada</span>} · {v.votos.length} voto(s)</p>
+            <div className="cartao-titulo">
+              <span className={`chip-icone pequeno ${v.aberta ? "chip-roxa" : "chip-cinza"}`}>🗳️</span>
+              <h3>{v.pergunta}</h3>
+              <span className="lado">{v.aberta ? <span className="etiqueta verde">aberta</span> : <span className="etiqueta cinza">encerrada</span>}</span>
+            </div>
+            <p className="item-meta">{v.votos.length} voto(s)</p>
             {v.opcoes.map((op: string, i: number) => {
               const n = v.votos.filter((x: any) => x.opcao === i).length;
               return (
@@ -896,12 +956,15 @@ function MoradoresTab({ estado, campo, form, setForm, acao, setOk, editandoMorad
   const emEdicao = editandoMorador || null;
   return (
     <div>
-      <div className="cartao">
-        <h2>👥 Moradores</h2>
-        <p>Cadastro de moradores e unidades do condomínio.</p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-azul">👥</span>
+        <div>
+          <h2>Moradores</h2>
+          <p>Cadastro de moradores e unidades do condomínio.</p>
+        </div>
       </div>
       <div className="cartao">
-        <h3>{emEdicao ? "Editar morador" : "Cadastrar morador"}</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-azul pequeno">👥</span><h3>{emEdicao ? "Editar morador" : "Cadastrar morador"}</h3></div>
         <form onSubmit={async (e) => {
           e.preventDefault();
           if (emEdicao) {
@@ -923,20 +986,35 @@ function MoradoresTab({ estado, campo, form, setForm, acao, setOk, editandoMorad
         </form>
       </div>
       {estado.pedidosCorrecao.filter((p: any) => p.status === "pendente").map((p: any) => (
-        <div key={p.id} className="cartao">
-          <h3>Pedido de correção — {p.moradorNome}</h3>
-          <p><strong>{p.campo}:</strong> errado: “{p.errado}” → certo: “{p.certo}”</p>
-          <button className="btn pequeno" onClick={() => acao("responderCorrecao", { id: p.id, aprovar: true })}>Aprovar em 1 clique</button>{" "}
-          <button className="btn perigo pequeno" onClick={() => acao("responderCorrecao", { id: p.id, aprovar: false })}>Recusar</button>
+        <div key={p.id} className="item-lista">
+          <span className="chip-icone chip-amarela pequeno">✏️</span>
+          <div className="item-lista-corpo">
+            <strong>Pedido de correção — {p.moradorNome}</strong>
+            <div className="item-meta"><strong>{p.campo}:</strong> errado: “{p.errado}” → certo: “{p.certo}”</div>
+          </div>
+          <div className="item-lista-lado">
+            <div className="item-lista-acoes">
+              <button className="btn pequeno" onClick={() => acao("responderCorrecao", { id: p.id, aprovar: true })}>Aprovar em 1 clique</button>
+              <button className="btn perigo pequeno" onClick={() => acao("responderCorrecao", { id: p.id, aprovar: false })}>Recusar</button>
+            </div>
+          </div>
         </div>
       ))}
       <div className="cartao">
-        <h3>Moradores cadastrados ({estado.moradores.length})</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-azul pequeno">👥</span><h3>Moradores cadastrados ({estado.moradores.length})</h3></div>
         {estado.moradores.map((m: any) => (
-          <div key={m.id} style={{ borderBottom: "1px solid #dde5ee", padding: "8px 0" }}>
-            <strong>{m.nome}</strong> — Bloco {m.bloco} · apto {m.apartamento} · {m.email || "sem e-mail"}{" "}
-            <button className="btn secundario pequeno" onClick={() => { setEditandoMorador(m); setForm({}); }}>Editar</button>{" "}
-            <button className="btn perigo pequeno" onClick={() => acao("removerMorador", { id: m.id })}>Remover</button>
+          <div key={m.id} className="item-lista">
+            <span className="chip-icone chip-azul pequeno">👤</span>
+            <div className="item-lista-corpo">
+              <strong>{m.nome}</strong>
+              <div className="item-meta">Bloco {m.bloco} · apto {m.apartamento} · {m.email || "sem e-mail"}</div>
+            </div>
+            <div className="item-lista-lado">
+              <div className="item-lista-acoes">
+                <button className="btn secundario pequeno" onClick={() => { setEditandoMorador(m); setForm({}); }}>Editar</button>
+                <button className="btn perigo pequeno" onClick={() => acao("removerMorador", { id: m.id })}>Remover</button>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -966,15 +1044,18 @@ function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps
   }
   return (
     <div>
-      <div className="cartao">
-        <h2>👔 Funcionários e folha de pagamento</h2>
-        <p>Cadastre os funcionários do condomínio e gere a folha do mês. Ao marcar um item como pago, o valor entra automaticamente como despesa no Financeiro.</p>
-        <p style={{ background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 12, padding: "10px 12px", fontSize: 14 }}>
-          ⚠️ Controle interno simples — não emite holerite oficial nem calcula encargos; as obrigações legais continuam com o contador do condomínio.
-        </p>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-roxa">👔</span>
+        <div>
+          <h2>Funcionários e folha de pagamento</h2>
+          <p>Cadastre os funcionários do condomínio e gere a folha do mês. Ao marcar um item como pago, o valor entra automaticamente como despesa no Financeiro.</p>
+        </div>
       </div>
+      <p style={{ background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 12, padding: "10px 12px", fontSize: 14, margin: "-8px 0 16px 66px" }}>
+        ⚠️ Controle interno simples — não emite holerite oficial nem calcula encargos; as obrigações legais continuam com o contador do condomínio.
+      </p>
       <div className="cartao">
-        <h3>{editando ? "Editar funcionário" : "Cadastrar funcionário"}</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">👔</span><h3>{editando ? "Editar funcionário" : "Cadastrar funcionário"}</h3></div>
         <form onSubmit={async (e) => {
           e.preventDefault();
           if (editando) {
@@ -1007,24 +1088,30 @@ function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps
         </form>
       </div>
       <div className="cartao">
-        <h3>Funcionários ({funcionarios.length})</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">👔</span><h3>Funcionários ({funcionarios.length})</h3></div>
         {funcionarios.length === 0 && <p>Nenhum funcionário cadastrado ainda.</p>}
         {funcionarios.map((f: any) => (
-          <div key={f.id} style={{ borderBottom: "1px solid #dde5ee", padding: "8px 0" }}>
-            <strong>{f.nome}</strong> — {f.cargo} · {f.tipoContrato} · {brl(f.salarioMensal)}/mês · admitido em {dataBR(f.dataAdmissao)}{" "}
-            {f.ativo ? <span className="etiqueta verde">ativo</span> : <span className="etiqueta cinza">inativo</span>}
-            <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
-              <button className="btn secundario pequeno" onClick={() => { setEditando(f); setForm({}); }}>Editar</button>
-              <button className="btn secundario pequeno" onClick={async () => {
-                const d = await acao("alternarFuncionarioAtivo", { id: f.id });
-                if (d?.ok) setOk(d.ativo ? "Funcionário ativado." : "Funcionário desativado. Ele não entra nas próximas folhas.");
-              }}>{f.ativo ? "Desativar" : "Ativar"}</button>
+          <div key={f.id} className="item-lista">
+            <span className={`chip-icone pequeno ${f.ativo ? "chip-roxa" : "chip-cinza"}`}>👔</span>
+            <div className="item-lista-corpo">
+              <strong>{f.nome}</strong>
+              <div className="item-meta">{f.cargo} · {f.tipoContrato} · {brl(f.salarioMensal)}/mês · admitido em {dataBR(f.dataAdmissao)}</div>
+            </div>
+            <div className="item-lista-lado">
+              {f.ativo ? <span className="etiqueta verde">ativo</span> : <span className="etiqueta cinza">inativo</span>}
+              <div className="item-lista-acoes">
+                <button className="btn secundario pequeno" onClick={() => { setEditando(f); setForm({}); }}>Editar</button>
+                <button className="btn secundario pequeno" onClick={async () => {
+                  const d = await acao("alternarFuncionarioAtivo", { id: f.id });
+                  if (d?.ok) setOk(d.ativo ? "Funcionário ativado." : "Funcionário desativado. Ele não entra nas próximas folhas.");
+                }}>{f.ativo ? "Desativar" : "Ativar"}</button>
+              </div>
             </div>
           </div>
         ))}
       </div>
       <div className="cartao">
-        <h3>📋 Folha de pagamento</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-azul pequeno">📋</span><h3>Folha de pagamento</h3></div>
         <div className="linha">
           <div className="campo"><label>Mês</label><input type="month" value={mesFolha} onChange={(e) => setMesFolha(e.target.value)} /></div>
         </div>
@@ -1038,17 +1125,22 @@ function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps
           <div>
             <p><strong>Folha de {nomeMes(folha.mes)}</strong> · Total líquido: <strong>{brl(folha.totalLiquido)}</strong></p>
             {folha.itens.map((item: any) => (
-              <div key={item.funcionarioId} style={{ borderBottom: "1px solid #dde5ee", padding: "10px 0" }}>
-                <strong>{item.funcionarioNome}</strong> — {item.cargo} · base {brl(item.salarioBase)}{" "}
-                {item.pago ? <span className="etiqueta verde">pago</span> : <span className="etiqueta amber">a pagar</span>}
+              <div key={item.funcionarioId} className="item-lista">
+                <span className={`chip-icone pequeno ${item.pago ? "chip-verde" : "chip-amarela"}`}>💰</span>
+                <div className="item-lista-corpo">
+                  <strong>{item.funcionarioNome}</strong>
+                  <div className="item-meta">{item.cargo} · base {brl(item.salarioBase)}</div>
                 <div className="linha" style={{ marginTop: 8 }}>
                   <div className="campo"><label>Adiantamento (R$)</label><input type="number" step="0.01" min="0" disabled={item.pago} value={valorEdicao(item.funcionarioId, "adiantamento", item.adiantamento)} onChange={(e) => mudarEdicao(item.funcionarioId, "adiantamento", e.target.value)} /></div>
                   <div className="campo"><label>Descontos (R$)</label><input type="number" step="0.01" min="0" disabled={item.pago} value={valorEdicao(item.funcionarioId, "descontos", item.descontos)} onChange={(e) => mudarEdicao(item.funcionarioId, "descontos", e.target.value)} /></div>
                   <div className="campo"><label>Extras (R$)</label><input type="number" step="0.01" min="0" disabled={item.pago} value={valorEdicao(item.funcionarioId, "extras", item.extras)} onChange={(e) => mudarEdicao(item.funcionarioId, "extras", e.target.value)} /></div>
                 </div>
                 <p>Líquido: <strong>{brl(item.liquido)}</strong></p>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {!item.pago && (
+                </div>
+                <div className="item-lista-lado">
+                  {item.pago ? <span className="etiqueta verde">pago</span> : <span className="etiqueta amber">a pagar</span>}
+                  <div className="item-lista-acoes">
+                    {!item.pago && (
                     <>
                       <button className="btn secundario pequeno" onClick={async () => {
                         const d = await acao("editarFolhaItem", {
@@ -1066,6 +1158,7 @@ function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps
                       }}>Marcar como pago</button>
                     </>
                   )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -1088,10 +1181,16 @@ function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps
           <div style={{ marginTop: 12 }}>
             <h4>Folhas geradas</h4>
             {[...folhas].sort((a: any, b: any) => (a.mes < b.mes ? 1 : -1)).map((f: any) => (
-              <p key={f.id}>
-                <button className="btn secundario pequeno" onClick={() => setMesFolha(f.mes)}>{nomeMes(f.mes)}</button>{" "}
-                {brl(f.totalLiquido)} · {f.itens.filter((i: any) => i.pago).length}/{f.itens.length} pago(s)
-              </p>
+              <div key={f.id} className="item-lista">
+                <span className="chip-icone chip-azul pequeno">📋</span>
+                <div className="item-lista-corpo">
+                  <strong>{brl(f.totalLiquido)}</strong>
+                  <div className="item-meta">{f.itens.filter((i: any) => i.pago).length}/{f.itens.length} pago(s)</div>
+                </div>
+                <div className="item-lista-lado">
+                  <button className="btn secundario pequeno" onClick={() => setMesFolha(f.mes)}>{nomeMes(f.mes)}</button>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -1147,9 +1246,16 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
   }
   return (
     <div>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-amarela">⭐</span>
+        <div>
+          <h2>Plano e FAQ</h2>
+          <p>Assinatura, dados do condomínio e dúvidas frequentes.</p>
+        </div>
+      </div>
       {ehSindico && (
         <div className="cartao">
-          <h3>🏢 Dados do condomínio</h3>
+          <div className="cartao-titulo"><span className="chip-icone chip-azul pequeno">🏢</span><h3>Dados do condomínio</h3></div>
           <p><strong>Nome atual:</strong> {condominio.nome}</p>
           <p><strong>Código de convite:</strong> {condominio.codigoConvite}{" "}
             <button className="btn secundario" style={{ padding: "4px 14px", fontSize: 14 }} onClick={copiarCodigo}>{copiado ? "✓ Copiado!" : "Copiar"}</button>
@@ -1164,7 +1270,7 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
         </div>
       )}
       <div className="cartao">
-        <h2>⭐ Plano e FAQ</h2>
+        <div className="cartao-titulo"><span className="chip-icone chip-amarela pequeno">⭐</span><h2 style={{ margin: 0, fontSize: 20, color: "var(--navy)" }}>Plano e FAQ</h2></div>
         <p><strong>Status:</strong> {estado.statusAssinatura.texto}</p>
         <p><strong>Preço:</strong> R$ 9,90/mês nos 6 primeiros meses, depois R$ 97/mês por condomínio. 14 dias grátis, sem cartão. Cancele quando quiser, sem fidelidade e sem multa.</p>
         {condominio.assinaturaStatus !== "ativa" && ehSindico && (
@@ -1186,7 +1292,7 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
         )}
       </div>
       <div className="cartao">
-        <h3>Perguntas frequentes</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-rosa pequeno">❓</span><h3>Perguntas frequentes</h3></div>
         <p><strong>Posso começar agora?</strong><br />Sim. O cadastro leva 1 minuto e você já usa tudo no teste grátis de 14 dias, sem cartão.</p>
         <p><strong>O morador precisa baixar aplicativo?</strong><br />Não. É um link só, que funciona no celular e no computador.</p>
         <p><strong>O CondoFree recebe o valor do boleto?</strong><br />Não. O valor do boleto é do condomínio e vai para a conta do condomínio.</p>
@@ -1205,16 +1311,78 @@ function urlBase64ParaUint8Array(base64: string) {
   return out;
 }
 
+// Banner "Instalar app" que aparece sozinho quando o navegador oferece a
+// instalação (Android/Chrome). O navegador NÃO deixa mostrar o convite
+// nativo sozinho ao entrar no site — o convite só abre quando a pessoa
+// toca em "Instalar". No iPhone, mostra o passo a passo do Safari.
+function BannerInstalar() {
+  const [promptInstalacao, setPromptInstalacao] = useState<BeforeInstallPromptEvent | null>(null);
+  const [ehIos, setEhIos] = useState(false);
+  const [instalado, setInstalado] = useState(false);
+  const [visivel, setVisivel] = useState(false);
+  const [msgIos, setMsgIos] = useState(false);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (standalone) { setInstalado(true); return; }
+    if (localStorage.getItem("condofree-banner-instalar") === "dispensado") return;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    setEhIos(ios);
+    const aoPerguntar = (e: Event) => {
+      e.preventDefault();
+      setPromptInstalacao(e as unknown as BeforeInstallPromptEvent);
+      setVisivel(true);
+    };
+    window.addEventListener("beforeinstallprompt", aoPerguntar);
+    if (ios) setVisivel(true);
+    return () => window.removeEventListener("beforeinstallprompt", aoPerguntar);
+  }, []);
+
+  if (instalado || !visivel) return null;
+
+  async function instalar() {
+    if (promptInstalacao) {
+      promptInstalacao.prompt();
+      const escolha = await promptInstalacao.userChoice;
+      if (escolha.outcome === "accepted") { setInstalado(true); return; }
+      setPromptInstalacao(null);
+      return;
+    }
+    setMsgIos(true);
+  }
+  function dispensar() {
+    localStorage.setItem("condofree-banner-instalar", "dispensado");
+    setVisivel(false);
+  }
+
+  return (
+    <div style={{ position: "fixed", left: 12, right: 12, bottom: 76, zIndex: 45, maxWidth: 520, margin: "0 auto", background: "#0b2a4a", color: "#fff", borderRadius: 16, padding: "12px 14px", display: "flex", gap: 12, alignItems: "center", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}>
+      <span style={{ fontSize: 28 }}>📱</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 800 }}>Instalar o CondoFree como app</div>
+        <div style={{ fontSize: 13, opacity: 0.85 }}>
+          {msgIos || ehIos ? "No iPhone: toque em Compartilhar e depois em “Adicionar à Tela de Início”." : "Abre em tela cheia, como aplicativo, sem baixar nada da loja."}
+        </div>
+      </div>
+      <button onClick={instalar} style={{ background: "#22a06b", color: "#fff", border: 0, borderRadius: 10, padding: "10px 14px", fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>Instalar</button>
+      <button onClick={dispensar} aria-label="Fechar" style={{ background: "none", border: 0, color: "#fff", fontSize: 20, cursor: "pointer", padding: 4 }}>×</button>
+    </div>
+  );
+}
+
 // Instalar o CondoFree como app + ativar notificações. O botão de
 // instalar só aparece quando o navegador oferece (Android/Chrome); no
 // iPhone a instalação é pelo Safari, "Adicionar à Tela de Início".
-function AppENotificacoes() {
+function AppENotificacoes({ ehSindico }: { ehSindico: boolean }) {
   const [instalado, setInstalado] = useState(false);
   const [ehIos, setEhIos] = useState(false);
   const [promptInstalacao, setPromptInstalacao] = useState<BeforeInstallPromptEvent | null>(null);
   const [notif, setNotif] = useState<"carregando" | "ativo" | "inativo" | "bloqueado" | "sem-suporte">("carregando");
   const [msg, setMsg] = useState("");
   const [agindo, setAgindo] = useState(false);
+  const [testando, setTestando] = useState(false);
 
   useEffect(() => {
     setEhIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
@@ -1305,6 +1473,20 @@ function AppENotificacoes() {
     }
   }
 
+  async function enviarTeste() {
+    setMsg("");
+    setTestando(true);
+    try {
+      const res = await fetch("/api/push/teste", { method: "POST" });
+      const d = await res.json();
+      setMsg(d.ok ? "Notificação de teste enviada — deve chegar neste aparelho em alguns segundos." : (d.erro || "Não foi possível enviar o teste."));
+    } catch {
+      setMsg("Não foi possível enviar o teste. Tente de novo.");
+    } finally {
+      setTestando(false);
+    }
+  }
+
   return (
     <div className="cartao" style={{ marginTop: 16 }}>
       <h2>📱 App e notificações</h2>
@@ -1321,18 +1503,27 @@ function AppENotificacoes() {
       <h3 style={{ marginTop: 16 }}>Notificações</h3>
       <p>
         {notif === "ativo"
-          ? "Notificações ativadas neste aparelho: você recebe aviso quando o síndico criar votação ou aviso, e quando sua reserva for respondida."
+          ? ehSindico
+            ? "Notificações ativadas neste aparelho: você recebe aviso quando um morador abrir ocorrência ou pedir reserva."
+            : "Notificações ativadas neste aparelho: você recebe aviso quando o síndico criar votação ou aviso, e quando sua reserva for respondida."
           : notif === "bloqueado"
             ? "As notificações estão bloqueadas neste navegador."
             : notif === "sem-suporte"
               ? "Este navegador não suporta notificações do CondoFree."
-              : "Ative para receber aviso quando o síndico criar votação ou aviso, e quando sua reserva for respondida."}
+              : ehSindico
+                ? "Ative para receber aviso quando um morador abrir ocorrência ou pedir reserva."
+                : "Ative para receber aviso quando o síndico criar votação ou aviso, e quando sua reserva for respondida."}
       </p>
       {(notif === "ativo" || notif === "inativo" || notif === "bloqueado") && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="btn" onClick={alternarNotificacoes} disabled={agindo}>
             {agindo ? "Aguarde..." : notif === "ativo" ? "Desativar notificações" : "Ativar notificações"}
           </button>
+          {notif === "ativo" && (
+            <button className="btn secundario" onClick={enviarTeste} disabled={testando}>
+              {testando ? "Enviando..." : "Enviar notificação de teste"}
+            </button>
+          )}
         </div>
       )}
       {msg && <p style={{ color: "#5b6b7d", marginTop: 8 }}>{msg}</p>}
@@ -1343,9 +1534,15 @@ function AppENotificacoes() {
 function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuporte: (s: string) => void }) {
   return (
     <div>
+      <div className="tab-cabecalho">
+        <span className="chip-icone chip-rosa">❓</span>
+        <div>
+          <h2>Ajuda / Suporte</h2>
+          <p>Como funciona o CondoFree e como falar com o suporte.</p>
+        </div>
+      </div>
       <div className="cartao">
-        <h2>❓ Ajuda / Suporte</h2>
-        <h3>Como funciona — passo a passo</h3>
+        <div className="cartao-titulo"><span className="chip-icone chip-rosa pequeno">❓</span><h3>Como funciona — passo a passo</h3></div>
         {ehSindico ? (
           <ol>
             <li>Cadastre os moradores na aba Moradores ou passe o código de convite para eles se cadastrarem.</li>
@@ -1367,7 +1564,7 @@ function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuport
           <button className="btn" onClick={() => abrirSuporte("Tenho uma dúvida sobre o CondoFree.")}>Falar no WhatsApp</button>
         </div>
       </div>
-      <AppENotificacoes />
+      <AppENotificacoes ehSindico={ehSindico} />
     </div>
   );
 }

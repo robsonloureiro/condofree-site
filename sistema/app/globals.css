@@ -442,3 +442,32 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
 @media (min-width: 561px) {
   .home-resumo-grade { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ---- Cabeçalhos de aba e itens de lista (padrão visual da Início, 07/11/2026) ---- */
+.tab-cabecalho { display: flex; align-items: center; gap: 14px; margin: 4px 0 16px; }
+.tab-cabecalho h2 { margin: 0; font-size: 22px; color: var(--navy); }
+.tab-cabecalho p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+.chip-icone { width: 52px; height: 52px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.chip-icone.pequeno { width: 38px; height: 38px; font-size: 20px; }
+.chip-verde { background: #dcfce7; }
+.chip-azul { background: #dbeafe; }
+.chip-laranja { background: #ffedd5; }
+.chip-roxa { background: #ede9fe; }
+.chip-amarela { background: #fef3c7; }
+.chip-rosa { background: #fce7f3; }
+.chip-cinza { background: #e5e7eb; }
+.cartao-titulo { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.cartao-titulo h3 { margin: 0; }
+.cartao-titulo .lado { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.item-lista { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: flex-start; }
+.item-lista-corpo { flex: 1; min-width: 0; }
+.item-lista-corpo > strong { font-size: 16px; color: var(--navy); }
+.item-meta { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.item-lista-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+.item-lista-acoes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.item-lista img.foto { max-width: 100%; border-radius: 12px; margin-top: 8px; }
+@media (max-width: 560px) {
+  .tab-cabecalho h2 { font-size: 20px; }
+  .item-lista { flex-wrap: wrap; }
+  .item-lista-lado { flex-direction: row; flex-wrap: wrap; align-items: center; width: 100%; }
+}

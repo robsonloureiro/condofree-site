@@ -79,3 +79,12 @@ export async function enviarPushParaCondominio(condominioId: string, payload: Pa
     .map((u) => u.id);
   await enviarPushParaUsuarios(ids, payload);
 }
+
+// Avisa o síndico do condomínio (ex.: morador abriu ocorrência ou pediu reserva).
+export async function enviarPushParaSindico(condominioId: string, payload: PayloadPush): Promise<void> {
+  const usuarios = await listarUsuarios();
+  const ids = usuarios
+    .filter((u) => u.condominioId === condominioId && u.papel === "sindico")
+    .map((u) => u.id);
+  await enviarPushParaUsuarios(ids, payload);
+}

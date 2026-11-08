@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { usuarioDaSessao, listarUsuarios, salvarUsuarios, novoId } from "@/lib/auth";
 import { carregarDados, salvarDados, podeCriar, erroCriacaoBloqueada, listarCondominios, salvarCondominios } from "@/lib/dados";
 import { hojeISO, dataBR, brl } from "@/lib/store";
-import { enviarPushParaCondominio, enviarPushParaUsuarios } from "@/lib/push";
+import { enviarPushParaCondominio, enviarPushParaSindico, enviarPushParaUsuarios } from "@/lib/push";
 import type { DadosCondominio } from "@/lib/types";
 
 const PLANOS_MP = {
@@ -78,6 +78,13 @@ export async function POST(req: NextRequest) {
         criadoEm: hojeISO(),
       });
       await salvar();
+      // Avisa o síndico quando um morador pede reserva (não trava se falhar).
+      if (!ehSindico) {
+        await enviarPushParaSindico(dados.condominio.id, {
+          titulo: "Nova reserva pedida 📅",
+          corpo: `${espaco.nome} — ${dataBR(data)} ${inicio} às ${fim} (${eu!.nome}).`,
+        });
+      }
       return Response.json({ ok: true });
     }
     case "aprovarReserva": {
@@ -172,6 +179,13 @@ export async function POST(req: NextRequest) {
         criadoEm: hojeISO(),
       });
       await salvar();
+      // Avisa o síndico quando um morador abre ocorrência (não trava se falhar).
+      if (!ehSindico) {
+        await enviarPushParaSindico(dados.condominio.id, {
+          titulo: "Nova ocorrência 🔧",
+          corpo: `${String(args.titulo)} — ${eu!.nome}.`,
+        });
+      }
       return Response.json({ ok: true });
     }
     case "mudarStatusOcorrencia": {
