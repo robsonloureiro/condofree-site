@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LOGO_DATA_URI } from "../../lib/logo";
+import { LOGO_DATA_URI, LOGIN_BG_DATA_URI } from "../../lib/logo";
 
 type Aba = "inicio" | "reservas" | "avisos" | "ocorrencias" | "boletos" | "financeiro" | "votacoes" | "moradores" | "funcionarios" | "plano" | "ajuda";
 
@@ -117,9 +117,56 @@ export default function Painel() {
   const boletosPendentes = estado.boletos.filter((b: any) => b.status === "pendente").length;
   const votacoesAbertas = estado.votacoes.filter((v: any) => v.aberta).length;
 
+  // Home nova (layout sugerido pelo Robson, 07/11/2026): saudação, ações
+  // rápidas, resumo e acesso rápido — tudo com os dados reais do condomínio.
+  const primeiroNome = (usuario.nome || "").split(" ")[0];
+  const iniciais = (usuario.nome || "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p: string) => p[0].toUpperCase())
+    .join("");
+  const temPendencia = reservasPendentes + ocorrenciasAbertas + votacoesAbertas > 0;
+  const emTrial = estado.condominio.assinaturaStatus === "trial";
+  const diasTrial = estado.statusAssinatura.diasRestantes;
+  const acoesRapidas: { rotulo: string; icone: string; classe: string; aba: Aba }[] = ehSindico
+    ? [
+        { rotulo: "Nova Reserva", icone: "📅", classe: "acao-verde", aba: "reservas" },
+        { rotulo: "Publicar Aviso", icone: "📢", classe: "acao-azul", aba: "avisos" },
+        { rotulo: "Abrir Ocorrência", icone: "🔧", classe: "acao-laranja", aba: "ocorrencias" },
+        { rotulo: "Gerar Boleto", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
+      ]
+    : [
+        { rotulo: "Nova Reserva", icone: "📅", classe: "acao-verde", aba: "reservas" },
+        { rotulo: "Ver Avisos", icone: "📢", classe: "acao-azul", aba: "avisos" },
+        { rotulo: "Abrir Ocorrência", icone: "🔧", classe: "acao-laranja", aba: "ocorrencias" },
+        { rotulo: "Ver Boletos", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
+      ];
+  const resumoItens: { num: string | number; rot: string; icone: string; fundo: string; aba: Aba; destaque?: boolean }[] = [
+    { num: reservasPendentes, rot: "Reservas pendentes", icone: "📅", fundo: "#dcfce7", aba: "reservas" },
+    { num: estado.avisos.length, rot: "Avisos no mural", icone: "📢", fundo: "#ffedd5", aba: "avisos" },
+    { num: ocorrenciasAbertas, rot: "Ocorrências abertas", icone: "🔧", fundo: "#ffedd5", aba: "ocorrencias" },
+    { num: boletosPendentes, rot: "Boletos pendentes", icone: "🧾", fundo: "#ede9fe", aba: "boletos" },
+    { num: votacoesAbertas, rot: "Votações abertas", icone: "🗳️", fundo: "#dbeafe", aba: "votacoes" },
+    { num: brl(estado.resumoFinanceiro.saldo), rot: "Saldo do mês", icone: "🪙", fundo: "#dcfce7", aba: "financeiro", destaque: true },
+  ];
+  const acessoRapido: { rotulo: string; icone: string; classe: string; aba: Aba }[] = ehSindico
+    ? [
+        { rotulo: "Moradores", icone: "👥", classe: "acao-azul", aba: "moradores" },
+        { rotulo: "Funcionários", icone: "👔", classe: "acao-roxa", aba: "funcionarios" },
+        { rotulo: "Financeiro", icone: "💰", classe: "acao-amarela", aba: "financeiro" },
+        { rotulo: "Plano e FAQ", icone: "⭐", classe: "acao-rosa", aba: "plano" },
+      ]
+    : [
+        { rotulo: "Avisos", icone: "📢", classe: "acao-azul", aba: "avisos" },
+        { rotulo: "Boletos", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
+        { rotulo: "Financeiro", icone: "💰", classe: "acao-amarela", aba: "financeiro" },
+        { rotulo: "Plano e FAQ", icone: "⭐", classe: "acao-rosa", aba: "plano" },
+      ];
+
   return (
     <div>
-      <header className="topo">
+      <header className={aba === "inicio" ? "topo topo-home" : "topo"}>
         <button className="hamburguer" onClick={() => setGaveta(true)} aria-label="Abrir menu">☰</button>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="logo" src={LOGO_DATA_URI} alt="CondoFree" />
@@ -145,6 +192,9 @@ export default function Painel() {
             <span>{m.icone}</span> {m.rotulo}
           </button>
         ))}
+        <button className="item" onClick={sair}>
+          <span>🚪</span> Sair
+        </button>
       </nav>
 
       <div className="painel-layout">
@@ -174,19 +224,82 @@ export default function Painel() {
 
         {aba === "inicio" && (
           <div>
-            <div className="cards">
-              <div className="cartao"><div className="resumo-numero">{reservasPendentes}</div><div className="resumo-rotulo">reservas pendentes</div></div>
-              <div className="cartao"><div className="resumo-numero">{estado.avisos.length}</div><div className="resumo-rotulo">avisos no mural</div></div>
-              <div className="cartao"><div className="resumo-numero">{ocorrenciasAbertas}</div><div className="resumo-rotulo">ocorrências abertas</div></div>
-              <div className="cartao"><div className="resumo-numero">{boletosPendentes}</div><div className="resumo-rotulo">boletos pendentes</div></div>
-              <div className="cartao"><div className="resumo-numero">{votacoesAbertas}</div><div className="resumo-rotulo">votações abertas</div></div>
-              <div className="cartao"><div className="resumo-numero">{brl(estado.resumoFinanceiro.saldo)}</div><div className="resumo-rotulo">saldo do mês</div></div>
+            <div className="home-hero" style={{ backgroundImage: `url(${LOGIN_BG_DATA_URI})` }}>
+              <div className="home-hero-topo">
+                <span className="home-hero-logo">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={LOGO_DATA_URI} alt="CondoFree" />
+                </span>
+                <span className="espaco" />
+                <button className="home-sino" onClick={() => irPara("avisos")} aria-label="Avisos">
+                  🔔
+                  {temPendencia && <span className="ponto" />}
+                </button>
+                <button className="home-avatar" onClick={() => irPara("plano")} aria-label="Plano e conta">
+                  {iniciais}
+                </button>
+              </div>
+              <div className="home-saudacao">Olá, {primeiroNome}! 👋</div>
+              <p className="home-sub">{ehSindico ? "Síndico" : "Morador"} • {estado.condominio.nome}</p>
+              <div className="home-teste">
+                {emTrial && diasTrial > 0 ? (
+                  <>
+                    <span>👑 Em teste grátis até {dataBR(estado.condominio.trialFim)}</span>
+                    <span className="falta">Faltam {diasTrial} dia{diasTrial === 1 ? "" : "s"}</span>
+                  </>
+                ) : (
+                  <span>{estado.condominio.assinaturaStatus === "ativa" ? "✅ Assinatura ativa" : `⭐ ${estado.statusAssinatura.texto}`}</span>
+                )}
+              </div>
             </div>
-            <div className="cartao">
-              <h2>Bem-vindo ao CondoFree</h2>
-              <p>Mais controle, zero burocracia. Use o menu para reservar espaços, ler avisos, abrir ocorrências, ver boletos e votar.</p>
-              <p style={{ color: "#5b6b7d" }}>Código de convite do condomínio: <strong>{estado.condominio.codigoConvite}</strong> — passe aos moradores para eles criarem a conta.</p>
+
+            <div className="home-acoes">
+              {acoesRapidas.map((a) => (
+                <button key={a.rotulo} className={a.classe} onClick={() => irPara(a.aba)}>
+                  <span className="icone">{a.icone}</span>
+                  {a.rotulo}
+                </button>
+              ))}
             </div>
+
+            <div className="home-resumo">
+              <div className="home-resumo-topo">
+                <h3>📊 Resumo do condomínio</h3>
+                <span>Este mês ▾</span>
+              </div>
+              <div className="home-resumo-grade">
+                {resumoItens.map((item) => (
+                  <button key={item.rot} className={`home-resumo-item${item.destaque ? " destaque" : ""}`} onClick={() => irPara(item.aba)}>
+                    <span className="icone" style={{ background: item.fundo }}>{item.icone}</span>
+                    <span>
+                      <span className="num">{item.num}</span>
+                      <br />
+                      <span className="rot">{item.rot}</span>
+                    </span>
+                    <span className="seta">›</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="cartao home-boasvindas">
+              <div>
+                <h2>Bem-vindo ao <span>CondoFree</span></h2>
+                <p>Mais controle, zero burocracia. Reserve espaços, leia avisos, abra ocorrências, veja boletos e participe das votações.</p>
+                <p style={{ color: "#5b6b7d" }}>Código de convite do condomínio: <strong>{estado.condominio.codigoConvite}</strong> — passe aos moradores para eles criarem a conta.</p>
+              </div>
+            </div>
+
+            <h3 className="home-acesso-titulo">⚡ Acesso rápido</h3>
+            <div className="home-acesso">
+              {acessoRapido.map((a) => (
+                <button key={a.rotulo} className={a.classe} onClick={() => irPara(a.aba)}>
+                  <span className="icone">{a.icone}</span>
+                  {a.rotulo}
+                </button>
+              ))}
+            </div>
+
             {estado.avisos.slice(0, 3).map((a: any) => (
               <div key={a.id} className="cartao">
                 <h3>📢 {a.titulo}</h3>
