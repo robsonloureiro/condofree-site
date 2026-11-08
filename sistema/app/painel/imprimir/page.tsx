@@ -39,7 +39,6 @@ export default async function ImprimirPrestacao({ searchParams }: { searchParams
 
   return (
     <>
-      <AutoPrint />
       <style>{`
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Arial, sans-serif; background: #fff !important; color: #12233a; font-size: 16px; line-height: 1.5; }
@@ -68,10 +67,7 @@ export default async function ImprimirPrestacao({ searchParams }: { searchParams
           }
         `}</style>
         <main className="doc">
-          <div className="acoes">
-            <button className="principal" onClick={() => window.print()}>Imprimir</button>
-            <a href="/painel">Voltar ao painel</a>
-          </div>
+          <AutoPrint />
           <div className="doc-cabecalho">
             <img src={LOGO_DATA_URI} alt="CondoFree" className="doc-logo" />
             <div>
