@@ -1,5 +1,5 @@
 import { usuarioDaSessao } from "@/lib/auth";
-import { carregarDados, statusAssinatura } from "@/lib/dados";
+import { carregarDados, salvarDados, gerarCobrancasRecorrentes, statusAssinatura } from "@/lib/dados";
 
 export async function GET() {
   const usuario = await usuarioDaSessao();
@@ -9,6 +9,11 @@ export async function GET() {
   const dados = await carregarDados(usuario.condominioId);
   if (!dados) {
     return Response.json({ ok: false, erro: "Condomínio não encontrado." }, { status: 404 });
+  }
+  // Cobrança recorrente do mês (dia 1, por exemplo): gera no primeiro
+  // acesso do mês, sem agendador.
+  if (gerarCobrancasRecorrentes(dados)) {
+    await salvarDados(dados);
   }
   const { senhaHash: _, ...usuarioPublico } = usuario;
   const eu = dados.moradores.find((m) => m.usuarioId === usuario.id) || null;

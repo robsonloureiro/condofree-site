@@ -132,6 +132,7 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
   font-size: 13px;
   font-weight: 700;
 }
+.etiqueta.azul { background: #dbeafe; color: #1e40af; }
 .etiqueta.amber { background: var(--amber-bg); color: var(--amber); }
 .etiqueta.verde { background: var(--green-bg); color: #166534; }
 .etiqueta.vermelha { background: var(--red-bg); color: var(--red); }

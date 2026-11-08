@@ -10,7 +10,7 @@ const MODULOS: { id: Aba; rotulo: string; icone: string; papeis: ("sindico" | "m
   { id: "reservas", rotulo: "Reservas", icone: "📅", papeis: ["sindico", "morador"] },
   { id: "avisos", rotulo: "Avisos", icone: "📢", papeis: ["sindico", "morador"] },
   { id: "ocorrencias", rotulo: "Ocorrências", icone: "🔧", papeis: ["sindico", "morador"] },
-  { id: "boletos", rotulo: "Boletos", icone: "🧾", papeis: ["sindico", "morador"] },
+  { id: "boletos", rotulo: "Cobranças", icone: "🧾", papeis: ["sindico", "morador"] },
   { id: "financeiro", rotulo: "Financeiro", icone: "💰", papeis: ["sindico", "morador"] },
   { id: "votacoes", rotulo: "Votações", icone: "🗳️", papeis: ["sindico", "morador"] },
   { id: "moradores", rotulo: "Moradores", icone: "👥", papeis: ["sindico"] },
@@ -130,7 +130,7 @@ export default function Painel() {
 
   const reservasPendentes = estado.reservas.filter((r: any) => r.status === "pendente").length;
   const ocorrenciasAbertas = estado.ocorrencias.filter((o: any) => o.status !== "resolvida").length;
-  const boletosPendentes = estado.boletos.filter((b: any) => b.status === "pendente").length;
+  const cobrancasPendentes = estado.boletos.filter((b: any) => b.status === "pendente").length;
   const votacoesAbertas = estado.votacoes.filter((v: any) => v.aberta).length;
 
   // Home nova (layout sugerido pelo Robson, 07/11/2026): saudação, ações
@@ -150,19 +150,19 @@ export default function Painel() {
         { rotulo: "Nova Reserva", icone: "📅", classe: "acao-verde", aba: "reservas" },
         { rotulo: "Publicar Aviso", icone: "📢", classe: "acao-azul", aba: "avisos" },
         { rotulo: "Abrir Ocorrência", icone: "🔧", classe: "acao-laranja", aba: "ocorrencias" },
-        { rotulo: "Gerar Boleto", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
+        { rotulo: "Nova cobrança", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
       ]
     : [
         { rotulo: "Nova Reserva", icone: "📅", classe: "acao-verde", aba: "reservas" },
         { rotulo: "Ver Avisos", icone: "📢", classe: "acao-azul", aba: "avisos" },
         { rotulo: "Abrir Ocorrência", icone: "🔧", classe: "acao-laranja", aba: "ocorrencias" },
-        { rotulo: "Ver Boletos", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
+        { rotulo: "Ver cobranças", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
       ];
   const resumoItens: { num: string | number; rot: string; icone: string; fundo: string; aba: Aba; destaque?: boolean }[] = [
     { num: reservasPendentes, rot: "Reservas pendentes", icone: "📅", fundo: "#dcfce7", aba: "reservas" },
     { num: estado.avisos.length, rot: "Avisos no mural", icone: "📢", fundo: "#ffedd5", aba: "avisos" },
     { num: ocorrenciasAbertas, rot: "Ocorrências abertas", icone: "🔧", fundo: "#ffedd5", aba: "ocorrencias" },
-    { num: boletosPendentes, rot: "Boletos pendentes", icone: "🧾", fundo: "#ede9fe", aba: "boletos" },
+    { num: cobrancasPendentes, rot: "Cobranças pendentes", icone: "🧾", fundo: "#ede9fe", aba: "boletos" },
     { num: votacoesAbertas, rot: "Votações abertas", icone: "🗳️", fundo: "#dbeafe", aba: "votacoes" },
     { num: brl(estado.resumoFinanceiro.saldo), rot: "Saldo do mês", icone: "🪙", fundo: "#dcfce7", aba: "financeiro", destaque: true },
   ];
@@ -175,7 +175,7 @@ export default function Painel() {
       ]
     : [
         { rotulo: "Avisos", icone: "📢", classe: "acao-azul", aba: "avisos" },
-        { rotulo: "Boletos", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
+        { rotulo: "Cobranças", icone: "🧾", classe: "acao-roxa", aba: "boletos" },
         { rotulo: "Financeiro", icone: "💰", classe: "acao-amarela", aba: "financeiro" },
         { rotulo: "Plano e FAQ", icone: "⭐", classe: "acao-rosa", aba: "plano" },
       ];
@@ -301,7 +301,7 @@ export default function Painel() {
             <div className="cartao home-boasvindas">
               <div>
                 <h2>Bem-vindo ao <span>CondoFree</span></h2>
-                <p>Mais controle, zero burocracia. Reserve espaços, leia avisos, abra ocorrências, veja boletos e participe das votações.</p>
+                <p>Mais controle, zero burocracia. Reserve espaços, leia avisos, abra ocorrências, veja cobranças e participe das votações.</p>
                 <p style={{ color: "#5b6b7d" }}>Código de convite do condomínio: <strong>{estado.condominio.codigoConvite}</strong>{" "}
                   <button className="btn secundario" style={{ padding: "4px 14px", fontSize: 14 }} onClick={copiarCodigoInicio}>{copiadoInicio ? "✓ Copiado!" : "Copiar"}</button>
                   {" "}— passe aos moradores para eles criarem a conta.</p>
@@ -338,7 +338,7 @@ export default function Painel() {
           <OcorrenciasTab estado={estado} ehSindico={ehSindico} campo={campo} form={form} setForm={setForm} acao={acao} setOk={setOk} />
         )}
         {aba === "boletos" && (
-          <BoletosTab estado={estado} ehSindico={ehSindico} campo={campo} form={form} setForm={setForm} acao={acao} setOk={setOk} />
+          <CobrancasTab estado={estado} ehSindico={ehSindico} campo={campo} form={form} setForm={setForm} acao={acao} setOk={setOk} />
         )}
         {aba === "financeiro" && (
           <FinanceiroTab estado={estado} ehSindico={ehSindico} campo={campo} form={form} setForm={setForm} acao={acao} setOk={setOk} />
@@ -650,54 +650,207 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
   );
 }
 
-function BoletosTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: TabProps) {
+function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
+  // Foto do comprovante passa pelo proxy /api/foto (mesmo padrão das ocorrências).
+  function srcFoto(url: string) {
+    try {
+      const u = new URL(url);
+      if (u.hostname.endsWith(".blob.vercel-storage.com")) {
+        return `/api/foto?u=${encodeURIComponent(url)}`;
+      }
+    } catch {}
+    return url;
+  }
+  const pixChave = estado.condominio.pixChave || "";
+  const recorrente = estado.condominio.cobrancaRecorrente || null;
+  const [pixInput, setPixInput] = useState(pixChave);
+  const [pixCopiado, setPixCopiado] = useState(false);
+  const [alvo, setAlvo] = useState("todos");
+  const [descricao, setDescricao] = useState("");
+  const [valor, setValor] = useState("");
+  const [vencimento, setVencimento] = useState("");
+  const [recorrenteChecked, setRecorrenteChecked] = useState(false);
+  const [diaRecorrente, setDiaRecorrente] = useState("1");
+  const [pagandoId, setPagandoId] = useState<string | null>(null);
+  const [comprovanteUrl, setComprovanteUrl] = useState("");
+  const [enviandoComprovante, setEnviandoComprovante] = useState(false);
+  const [erroComprovante, setErroComprovante] = useState("");
+
+  async function copiarPix() {
+    try {
+      await navigator.clipboard.writeText(pixChave);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = pixChave;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setPixCopiado(true);
+    setTimeout(() => setPixCopiado(false), 2000);
+  }
+
+  async function enviarComprovante(arquivo: File) {
+    setErroComprovante("");
+    setEnviandoComprovante(true);
+    try {
+      const fd = new FormData();
+      fd.append("foto", arquivo);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const d = await res.json();
+      if (d.ok && d.url) setComprovanteUrl(d.url);
+      else setErroComprovante(d.erro || "Não foi possível enviar o comprovante. Tente novamente.");
+    } catch {
+      setErroComprovante("Não foi possível enviar o comprovante. Tente novamente.");
+    } finally {
+      setEnviandoComprovante(false);
+    }
+  }
+
   return (
     <div>
       <div className="tab-cabecalho">
         <span className="chip-icone chip-roxa">🧾</span>
         <div>
-          <h2>Boletos</h2>
-          <p>2ª via do boleto do condomínio, sempre aqui.</p>
+          <h2>Cobranças</h2>
+          <p>Taxa do condomínio, extras e multas — pague via Pix e envie o comprovante.</p>
         </div>
       </div>
-      <p style={{ color: "#5b6b7d", fontSize: 14, margin: "-8px 0 16px 66px" }}>O CondoFree não recebe o valor do boleto. O pagamento vai direto para a conta do condomínio.</p>
+      <p style={{ color: "#5b6b7d", fontSize: 14, margin: "-8px 0 16px 66px" }}>O CondoFree não recebe o valor da cobrança. O pagamento vai direto para o Pix do condomínio.</p>
+
+      {!ehSindico && (
+        <div className="cartao">
+          <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">💳</span><h3>Pague via Pix</h3></div>
+          {pixChave ? (
+            <p>Chave Pix do condomínio: <strong>{pixChave}</strong>{" "}
+              <button className="btn secundario pequeno" style={{ padding: "4px 14px", fontSize: 14 }} onClick={copiarPix}>{pixCopiado ? "✓ Copiado!" : "Copiar Pix"}</button>
+            </p>
+          ) : (
+            <p style={{ color: "#5b6b7d" }}>O síndico ainda não cadastrou o Pix do condomínio.</p>
+          )}
+        </div>
+      )}
+
       {ehSindico && (
         <div className="cartao">
-          <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">🧾</span><h3>Gerar boletos do mês</h3></div>
+          <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">💳</span><h3>Pix para recebimento</h3></div>
+          <p style={{ color: "#5b6b7d" }}>Os moradores pagam neste Pix e enviam o comprovante. O dinheiro cai direto na conta do condomínio.</p>
+          <div className="campo"><label>Chave Pix do condomínio</label><input value={pixInput} onChange={(e) => setPixInput(e.target.value)} placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória" /></div>
+          <button className="btn" onClick={async () => {
+            const d = await acao("salvarPix", { pixChave: pixInput });
+            if (d?.ok) setOk("Pix salvo.");
+          }}>Salvar Pix</button>
+          {recorrente && (
+            <p style={{ color: "#5b6b7d", marginTop: 12 }}>🔁 Cobrança recorrente ativa: {recorrente.descricao} — {brl(recorrente.valor)} todo dia {recorrente.dia}.{" "}
+              <button className="btn secundario pequeno" onClick={async () => {
+                const d = await acao("cancelarRecorrente", {});
+                if (d?.ok) setOk("Cobrança recorrente cancelada.");
+              }}>Cancelar recorrência</button>
+            </p>
+          )}
+        </div>
+      )}
+
+      {ehSindico && (
+        <div className="cartao">
+          <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">🧾</span><h3>Nova cobrança</h3></div>
           <form onSubmit={async (e) => {
             e.preventDefault();
-            const d = await acao("gerarBoletosMes", { mes: form.mesBoleto || new Date().toISOString().slice(0, 7), valor: Number(form.valorBoleto) });
-            if (d?.ok) setOk(`${d.criados} boleto(s) gerado(s).`);
+            const d = await acao("criarCobranca", { alvo, descricao, valor: Number(valor), vencimento, recorrente: recorrenteChecked, diaRecorrente: Number(diaRecorrente) });
+            if (d?.ok) {
+              setOk(`${d.criadas} cobrança(s) criada(s) e moradores avisados.`);
+              setDescricao(""); setValor(""); setVencimento(""); setRecorrenteChecked(false);
+            }
           }}>
-            <div className="linha">
-              <div className="campo"><label>Mês</label><input type="month" {...campo("mesBoleto")} /></div>
-              <div className="campo"><label>Valor da taxa (R$)</label><input type="number" step="0.01" {...campo("valorBoleto")} placeholder="482,90" /></div>
+            <div className="campo"><label>Para quem</label>
+              <select value={alvo} onChange={(e) => setAlvo(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 10, fontSize: 15, background: "#fff" }}>
+                <option value="todos">Todos os moradores</option>
+                {estado.moradores.map((m: any) => (
+                  <option key={m.id} value={m.id}>{m.nome} — Bloco {m.bloco}, apto {m.apartamento}</option>
+                ))}
+              </select>
             </div>
-            <button className="btn" type="submit">Gerar boletos do mês</button>
+            <div className="linha">
+              <div className="campo"><label>Descrição</label><input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Ex.: Taxa de condomínio — Novembro" /></div>
+              <div className="campo"><label>Valor (R$)</label><input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="482,90" /></div>
+            </div>
+            <div className="linha">
+              <div className="campo"><label>Vencimento</label><input type="date" value={vencimento} onChange={(e) => setVencimento(e.target.value)} /></div>
+              <div className="campo"><label>Repetir todo mês</label>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 400, marginTop: 8 }}>
+                  <input type="checkbox" checked={recorrenteChecked} onChange={(e) => setRecorrenteChecked(e.target.checked)} />
+                  Criar de novo todo mês
+                </label>
+              </div>
+              {recorrenteChecked && (
+                <div className="campo"><label>Dia do mês</label><input type="number" min={1} max={28} value={diaRecorrente} onChange={(e) => setDiaRecorrente(e.target.value)} /></div>
+              )}
+            </div>
+            <button className="btn" type="submit">Criar cobrança</button>
           </form>
         </div>
       )}
+
       {estado.boletos.map((b: any) => (
         <div key={b.id} className="item-lista">
-          <span className={`chip-icone pequeno ${b.status === "pago" ? "chip-verde" : b.status === "pendente" ? "chip-amarela" : "chip-rosa"}`}>🧾</span>
+          <span className={`chip-icone pequeno ${b.status === "pago" ? "chip-verde" : b.status === "aguardando" ? "chip-azul" : b.status === "pendente" ? "chip-amarela" : "chip-rosa"}`}>🧾</span>
           <div className="item-lista-corpo">
-            <strong>{b.moradorNome} — {brl(b.valor)}</strong>
+            <strong>{b.descricao || "Taxa do condomínio"} — {b.moradorNome} — {brl(b.valor)}</strong>
             <div className="item-meta">Vencimento: {dataBR(b.vencimento)}</div>
-            {b.codigoBarras && <div className="item-meta" style={{ wordBreak: "break-all" }}>Código de barras: {b.codigoBarras}</div>}
+            {b.comprovanteUrl && (
+              <div style={{ marginTop: 8 }}>
+                <img src={srcFoto(b.comprovanteUrl)} alt="Comprovante" style={{ maxWidth: 220, borderRadius: 12, border: "1px solid var(--border)" }} />
+              </div>
+            )}
+            {!ehSindico && b.status === "pendente" && pagandoId === b.id && (
+              <div style={{ marginTop: 8 }}>
+                <label className="btn secundario pequeno" style={{ cursor: "pointer" }}>
+                  {enviandoComprovante ? "Enviando..." : comprovanteUrl ? "Trocar comprovante" : "Anexar comprovante (foto)"}
+                  <input type="file" accept="image/*" hidden onChange={(e) => {
+                    const arq = e.target.files?.[0];
+                    if (arq) enviarComprovante(arq);
+                  }} />
+                </label>
+                {comprovanteUrl && (
+                  <div style={{ marginTop: 8 }}>
+                    <img src={srcFoto(comprovanteUrl)} alt="Comprovante" style={{ maxWidth: 220, borderRadius: 12, border: "1px solid var(--border)" }} />
+                    <div style={{ marginTop: 8 }}>
+                      <button className="btn pequeno" onClick={async () => {
+                        const d = await acao("marcarPagoMorador", { id: b.id, comprovanteUrl });
+                        if (d?.ok) { setOk("Pagamento marcado. O síndico vai confirmar o recebimento."); setPagandoId(null); setComprovanteUrl(""); }
+                      }}>Enviar comprovante e marcar como pago</button>
+                    </div>
+                  </div>
+                )}
+                {erroComprovante && <p style={{ color: "#b91c1c" }}>{erroComprovante}</p>}
+              </div>
+            )}
           </div>
           <div className="item-lista-lado">
-            {b.status === "pago" && <span className="etiqueta verde">pago</span>}
+            {b.status === "pago" && <span className="etiqueta verde">pago ✓</span>}
             {b.status === "pendente" && <span className="etiqueta amber">pendente</span>}
+            {b.status === "aguardando" && <span className="etiqueta azul">aguardando confirmação</span>}
             {b.status === "vencido" && <span className="etiqueta vermelha">vencido</span>}
-            {ehSindico && (
-              <button className="btn pequeno" onClick={() => acao("alternarStatusBoleto", { id: b.id })}>
-                {b.status === "pago" ? "Voltar para pendente" : "Marcar como pago"}
-              </button>
+            {!ehSindico && b.status === "pendente" && pagandoId !== b.id && (
+              <button className="btn pequeno" onClick={() => { setPagandoId(b.id); setComprovanteUrl(""); setErroComprovante(""); }}>Marcar como pago</button>
+            )}
+            {ehSindico && b.status === "aguardando" && (
+              <>
+                <button className="btn pequeno" onClick={() => acao("confirmarRecebimento", { id: b.id })}>Confirmar recebimento</button>
+                <button className="btn perigo pequeno" onClick={() => acao("recusarComprovante", { id: b.id })}>Recusar comprovante</button>
+              </>
+            )}
+            {ehSindico && b.status === "pendente" && (
+              <button className="btn pequeno" onClick={() => acao("confirmarRecebimento", { id: b.id })}>Confirmar recebimento</button>
+            )}
+            {ehSindico && b.status === "pago" && (
+              <button className="btn secundario pequeno" onClick={() => acao("alternarStatusBoleto", { id: b.id })}>Voltar para pendente</button>
             )}
           </div>
         </div>
       ))}
-      {estado.boletos.length === 0 && <div className="cartao"><p>Nenhum boleto ainda.</p></div>}
+      {estado.boletos.length === 0 && <div className="cartao"><p>Nenhuma cobrança ainda.</p></div>}
     </div>
   );
 }
@@ -710,7 +863,7 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
   const pendentes = lancamentos.filter((l: any) => !l.pago);
   const MESES_LONGOS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
   const nomeMesLongo = (m: string) => { const [y, mm] = m.split("-"); return `${MESES_LONGOS[Number(mm) - 1] || ""} de ${y}`; };
-  const ROTULO_CATEGORIA: Record<string, string> = { limpeza: "Limpeza", manutencao: "Manutenção", energia: "Energia", agua: "Água", seguranca: "Segurança", boleto: "Boleto", taxa_extra: "Taxa extra", aluguel_salao: "Aluguel do salão", multa: "Multa", "Folha de pagamento": "Folha de pagamento", outros: "Outros" };
+  const ROTULO_CATEGORIA: Record<string, string> = { limpeza: "Limpeza", manutencao: "Manutenção", energia: "Energia", agua: "Água", seguranca: "Segurança", boleto: "Cobrança", taxa_extra: "Taxa extra", aluguel_salao: "Aluguel do salão", multa: "Multa", "Folha de pagamento": "Folha de pagamento", outros: "Outros" };
   function baixarPrestacao() {
     const linhas = [
       `PRESTAÇÃO DE CONTAS — ${estado.condominio.nome}`,
@@ -1621,7 +1774,7 @@ function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuport
             <li>Cadastre os moradores na aba Moradores ou passe o código de convite para eles se cadastrarem.</li>
             <li>Crie os espaços do condomínio na aba Reservas.</li>
             <li>Poste o primeiro aviso no mural e acompanhe quem leu.</li>
-            <li>Gere os boletos do mês na aba Boletos.</li>
+            <li>Crie cobranças na aba Cobranças.</li>
             <li>Quando o teste grátis acabar, assine na aba Plano e FAQ.</li>
           </ol>
         ) : (
@@ -1629,7 +1782,7 @@ function AjudaTab({ ehSindico, abrirSuporte }: { ehSindico: boolean; abrirSuport
             <li>Veja os avisos no mural e marque que leu.</li>
             <li>Reserve o salão ou a churrasqueira na aba Reservas.</li>
             <li>Abra uma ocorrência com foto se algo precisar de reparo.</li>
-            <li>Veja a 2ª via do seu boleto na aba Boletos.</li>
+            <li>Veja suas cobranças na aba Cobranças.</li>
             <li>Vote nas decisões do condomínio na aba Votações.</li>
           </ol>
         )}

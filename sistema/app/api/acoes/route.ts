@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   if (!dados.folhas) dados.folhas = [];
 
   const precisaCriar = [
-    "criarReserva", "criarAviso", "criarOcorrencia", "criarBoleto", "gerarBoletosMes",
+    "criarReserva", "criarAviso", "criarOcorrencia", "criarCobranca",
     "criarVotacao", "criarMorador", "criarLancamento", "criarEspaco",
     "criarFuncionario", "gerarFolhaMes",
   ].includes(acao);
@@ -196,48 +196,134 @@ export async function POST(req: NextRequest) {
       await salvar();
       return Response.json({ ok: true });
     }
-    // ---------- Boletos ----------
-    case "criarBoleto": {
-      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico cria boletos." }, { status: 403 });
-      const morador = dados.moradores.find((m) => m.id === args.moradorId);
-      if (!morador) return Response.json({ ok: false, erro: "Morador não encontrado." }, { status: 400 });
+    // ---------- Cobranças ----------
+    case "criarCobranca": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico cria cobranças." }, { status: 403 });
+      const descricao = String(args.descricao || "").trim() || "Taxa do condomínio";
       const valor = Number(args.valor);
-      if (!valor || valor <= 0 || !args.vencimento) return Response.json({ ok: false, erro: "Confira valor e vencimento." }, { status: 400 });
-      dados.boletos.push({
-        id: novoId("bol"),
-        moradorId: morador.id,
-        moradorNome: morador.nome,
-        valor,
-        vencimento: String(args.vencimento),
-        status: "pendente",
-        codigoBarras: (args.codigoBarras as string) || null,
-        mes: String(args.vencimento).slice(0, 7),
-      });
-      await salvar();
-      return Response.json({ ok: true });
-    }
-    case "gerarBoletosMes": {
-      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico gera boletos." }, { status: 403 });
-      const valor = Number(args.valor);
-      const mes = String(args.mes || new Date().toISOString().slice(0, 7));
-      if (!valor || valor <= 0) return Response.json({ ok: false, erro: "Informe o valor da taxa do mês." }, { status: 400 });
-      let criados = 0;
-      for (const morador of dados.moradores) {
-        if (dados.boletos.some((b) => b.moradorId === morador.id && b.mes === mes)) continue;
+      const vencimento = String(args.vencimento || "");
+      if (!valor || valor <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(vencimento)) {
+        return Response.json({ ok: false, erro: "Confira descrição, valor e vencimento." }, { status: 400 });
+      }
+      const mes = vencimento.slice(0, 7);
+      const alvo = String(args.alvo || "todos");
+      const alvos = alvo === "todos"
+        ? dados.moradores
+        : dados.moradores.filter((m) => m.id === alvo);
+      if (alvos.length === 0) return Response.json({ ok: false, erro: "Escolha para quem é a cobrança." }, { status: 400 });
+      let criadas = 0;
+      for (const morador of alvos) {
+        if (dados.boletos.some((b) => b.moradorId === morador.id && b.mes === mes && (b.descricao || "") === descricao)) continue;
         dados.boletos.push({
           id: novoId("bol"),
           moradorId: morador.id,
           moradorNome: morador.nome,
           valor,
-          vencimento: `${mes}-10`,
+          vencimento,
           status: "pendente",
           codigoBarras: null,
           mes,
+          descricao,
+          comprovanteUrl: null,
         });
-        criados++;
+        criadas++;
+      }
+      // Recorrente: todo mês, no dia escolhido, cria a mesma cobrança para todos.
+      if (args.recorrente) {
+        const dia = Math.min(Math.max(1, Number(args.diaRecorrente) || 1), 28);
+        dados.condominio.cobrancaRecorrente = { dia, valor, descricao };
       }
       await salvar();
-      return Response.json({ ok: true, criados });
+      // Avisa os moradores cobrados (não trava se falhar).
+      const ids = alvos
+        .map((m) => m.usuarioId)
+        .filter((id): id is string => Boolean(id));
+      if (ids.length > 0) {
+        await enviarPushParaUsuarios(ids, {
+          titulo: "Nova cobrança 💰",
+          corpo: `${descricao} — ${brl(valor)}, vencimento ${dataBR(vencimento)}. Pague via Pix e envie o comprovante.`,
+        });
+      }
+      return Response.json({ ok: true, criadas });
+    }
+    case "cancelarRecorrente": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico muda a cobrança recorrente." }, { status: 403 });
+      dados.condominio.cobrancaRecorrente = null;
+      await salvar();
+      return Response.json({ ok: true });
+    }
+    case "salvarPix": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico cadastra o Pix." }, { status: 403 });
+      const chave = String(args.pixChave || "").trim();
+      dados.condominio.pixChave = chave || null;
+      await salvar();
+      return Response.json({ ok: true });
+    }
+    case "marcarPagoMorador": {
+      const boleto = dados.boletos.find((b) => b.id === args.id);
+      if (!boleto) return Response.json({ ok: false, erro: "Cobrança não encontrada." }, { status: 404 });
+      if (!ehSindico && (!eu || boleto.moradorId !== eu.id)) {
+        return Response.json({ ok: false, erro: "Essa cobrança não é sua." }, { status: 403 });
+      }
+      if (boleto.status === "pago") return Response.json({ ok: false, erro: "Essa cobrança já foi confirmada." }, { status: 400 });
+      boleto.status = "aguardando";
+      boleto.comprovanteUrl = (args.comprovanteUrl as string) || null;
+      await salvar();
+      // Avisa o síndico que o morador marcou como pago (não trava se falhar).
+      if (!ehSindico) {
+        await enviarPushParaSindico(dados.condominio.id, {
+          titulo: "Pagamento marcado 💰",
+          corpo: `${boleto.moradorNome} marcou ${boleto.descricao || "a cobrança"} (${brl(boleto.valor)}) como paga. Confira o comprovante.`,
+        });
+      }
+      return Response.json({ ok: true });
+    }
+    case "confirmarRecebimento": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico confirma recebimentos." }, { status: 403 });
+      const boleto = dados.boletos.find((b) => b.id === args.id);
+      if (!boleto) return Response.json({ ok: false, erro: "Cobrança não encontrada." }, { status: 404 });
+      if (boleto.status === "pago") return Response.json({ ok: false, erro: "Essa cobrança já foi confirmada." }, { status: 400 });
+      boleto.status = "pago";
+      if (!dados.lancamentos.some((l) => l.boletoId === boleto.id)) {
+        dados.lancamentos.push({
+          id: novoId("lan"),
+          tipo: "receita",
+          categoria: "boleto",
+          descricao: `Cobrança — ${boleto.moradorNome}`,
+          valor: boleto.valor,
+          data: new Date().toISOString().slice(0, 10),
+          pago: true,
+          origem: "boleto",
+          boletoId: boleto.id,
+        });
+      }
+      await salvar();
+      // Avisa o morador que o pagamento foi confirmado (não trava se falhar).
+      const morador = dados.moradores.find((m) => m.id === boleto.moradorId);
+      if (morador?.usuarioId) {
+        await enviarPushParaUsuarios([morador.usuarioId], {
+          titulo: "Pagamento confirmado ✅",
+          corpo: `${boleto.descricao || "Cobrança"} (${brl(boleto.valor)}) — recebimento confirmado pelo síndico.`,
+        });
+      }
+      return Response.json({ ok: true });
+    }
+    case "recusarComprovante": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico recusa comprovantes." }, { status: 403 });
+      const boleto = dados.boletos.find((b) => b.id === args.id);
+      if (!boleto) return Response.json({ ok: false, erro: "Cobrança não encontrada." }, { status: 404 });
+      if (boleto.status !== "aguardando") return Response.json({ ok: false, erro: "Essa cobrança não está aguardando confirmação." }, { status: 400 });
+      boleto.status = "pendente";
+      boleto.comprovanteUrl = null;
+      await salvar();
+      const morador = dados.moradores.find((m) => m.id === boleto.moradorId);
+      if (morador?.usuarioId) {
+        await enviarPushParaUsuarios([morador.usuarioId], {
+          titulo: "Comprovante não confirmado",
+          corpo: `O síndico não confirmou o pagamento de ${boleto.descricao || "sua cobrança"}. Confira o pagamento e envie o comprovante de novo.`,
+        });
+      }
+      return Response.json({ ok: true });
     }
     case "alternarStatusBoleto": {
       if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico confirma boletos." }, { status: 403 });
@@ -253,7 +339,7 @@ export async function POST(req: NextRequest) {
             id: novoId("lan"),
             tipo: "receita",
             categoria: "boleto",
-            descricao: `Boleto — ${boleto.moradorNome}`,
+            descricao: `Cobrança — ${boleto.moradorNome}`,
             valor: boleto.valor,
             data: new Date().toISOString().slice(0, 10),
             pago: true,

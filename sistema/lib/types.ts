@@ -21,6 +21,8 @@ export interface Condominio {
   assinaturaPlanoId?: string | null;
   assinaturaPreapprovalId?: string | null;
   mpConfig?: { accessToken?: string } | null;
+  pixChave?: string | null; // Pix do condomínio para receber as cobranças
+  cobrancaRecorrente?: { dia: number; valor: number; descricao: string } | null;
 }
 
 export interface Morador {
@@ -76,9 +78,11 @@ export interface Boleto {
   moradorNome: string;
   valor: number;
   vencimento: string; // YYYY-MM-DD
-  status: "pendente" | "pago" | "vencido";
+  status: "pendente" | "aguardando" | "pago" | "vencido"; // aguardando = morador marcou pago, síndico ainda não confirmou
   codigoBarras?: string | null;
   mes: string; // YYYY-MM
+  descricao?: string | null;
+  comprovanteUrl?: string | null;
 }
 
 export interface Votacao {

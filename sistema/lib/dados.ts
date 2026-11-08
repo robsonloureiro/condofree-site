@@ -1,5 +1,42 @@
 import { readJSON, writeJSON } from "./store";
+import { novoId } from "./auth";
 import type { DadosCondominio, Condominio } from "./types";
+
+/** Gera as cobranças recorrentes do mês, se for o dia (ou depois) e ainda
+ * não existirem. Roda no carregamento do painel: a cobrança do dia 1
+ * aparece no primeiro acesso do mês, sem precisar de agendador.
+ * Retorna true quando criou alguma cobrança (quem chama deve salvar). */
+export function gerarCobrancasRecorrentes(dados: DadosCondominio): boolean {
+  const tpl = dados.condominio.cobrancaRecorrente;
+  if (!tpl) return false;
+  const hoje = new Date();
+  const mes = hoje.toISOString().slice(0, 7);
+  const dia = Math.min(Math.max(1, tpl.dia || 1), 28);
+  if (hoje.getDate() < dia) return false;
+  const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+  const vencimento = `${mes}-${String(Math.min(dia, ultimoDia)).padStart(2, "0")}`;
+  let criou = false;
+  for (const morador of dados.moradores) {
+    const jaExiste = dados.boletos.some(
+      (b) => b.moradorId === morador.id && b.mes === mes && (b.descricao || "") === tpl.descricao,
+    );
+    if (jaExiste) continue;
+    dados.boletos.push({
+      id: novoId("bol"),
+      moradorId: morador.id,
+      moradorNome: morador.nome,
+      valor: tpl.valor,
+      vencimento,
+      status: "pendente",
+      codigoBarras: null,
+      mes,
+      descricao: tpl.descricao,
+      comprovanteUrl: null,
+    });
+    criou = true;
+  }
+  return criou;
+}
 
 export async function carregarDados(condominioId: string): Promise<DadosCondominio | null> {
   return readJSON<DadosCondominio | null>(`db/condos/${condominioId}.json`, null);
