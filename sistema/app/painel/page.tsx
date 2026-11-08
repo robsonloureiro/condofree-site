@@ -711,7 +711,7 @@ function FinanceiroTab({ estado, ehSindico, campo, form, setForm, acao, setOk }:
           <div className="cartao"><div className="resumo-numero">{brl(entradas - saidas)}</div><div className="resumo-rotulo">saldo do mês</div></div>
         </div>
         <button className="btn" onClick={baixarPrestacao}>Baixar prestação de contas</button>{" "}
-        <button className="btn secundario" onClick={() => window.print()}>Imprimir</button>
+        <button className="btn secundario" onClick={() => window.open(`/painel/imprimir?mes=${mes}`, "_blank")}>Imprimir</button>
       </div>
       <div className="cartao">
         <h3>Novo lançamento</h3>
