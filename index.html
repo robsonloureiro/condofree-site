@@ -772,7 +772,55 @@ body.chat-open .wa-float{opacity:0;pointer-events:none;visibility:hidden}
     });
   }
 
+  // Banner "Instalar app": aparece sozinho quando o navegador oferece a
+  // instalação (Android/Chrome). O navegador NÃO deixa mostrar o convite
+  // nativo sozinho ao entrar no site — o convite só abre quando a pessoa
+  // toca em "Instalar". No iPhone, mostra o passo a passo do Safari.
+  (function(){
+    var banner=document.getElementById('bannerInstalar');
+    if(!banner) return;
+    var standalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+    if(standalone) return;
+    try{ if(localStorage.getItem('condofree-banner-instalar')==='dispensado') return; }catch(e){}
+    var ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+    var deferred=null;
+    var texto=document.getElementById('bannerInstalarTexto');
+    function mostrar(){ banner.style.display='flex'; }
+    function instalar(){
+      if(deferred){
+        deferred.prompt();
+        deferred.userChoice.then(function(escolha){
+          if(escolha.outcome==='accepted'){ banner.style.display='none'; }
+          deferred=null;
+        });
+        return;
+      }
+      if(texto) texto.textContent='No iPhone: toque em Compartilhar e depois em “Adicionar à Tela de Início”.';
+    }
+    function dispensar(){
+      try{ localStorage.setItem('condofree-banner-instalar','dispensado'); }catch(e){}
+      banner.style.display='none';
+    }
+    document.getElementById('bannerInstalarBtn').addEventListener('click',instalar);
+    document.getElementById('bannerInstalarFechar').addEventListener('click',dispensar);
+    window.addEventListener('beforeinstallprompt',function(e){
+      e.preventDefault();
+      deferred=e;
+      mostrar();
+    });
+    if(ios) mostrar();
+  })();
+
 })();
 </script>
+<div id="bannerInstalar" style="display:none;position:fixed;left:12px;right:12px;bottom:16px;z-index:90;max-width:520px;margin:0 auto;background:#0b2a4a;color:#fff;border-radius:16px;padding:12px 14px;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);">
+  <span style="font-size:28px;">📱</span>
+  <div style="flex:1;">
+    <div style="font-weight:800;">Instalar o CondoFree como app</div>
+    <div id="bannerInstalarTexto" style="font-size:13px;opacity:.85;">Abre em tela cheia, como aplicativo, sem baixar nada da loja.</div>
+  </div>
+  <button id="bannerInstalarBtn" style="background:#22a06b;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;white-space:nowrap;">Instalar</button>
+  <button id="bannerInstalarFechar" aria-label="Fechar" style="background:none;border:0;color:#fff;font-size:20px;cursor:pointer;padding:4px;">×</button>
+</div>
 </body>
 </html>
