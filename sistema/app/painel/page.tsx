@@ -1103,6 +1103,25 @@ function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps
 function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; ehSindico: boolean; acao: (n: string, a?: Record<string, unknown>) => Promise<any>; setOk: (s: string) => void; setErro: (s: string) => void }) {
   const condominio = estado.condominio;
   const [novoNome, setNovoNome] = useState("");
+  const [copiado, setCopiado] = useState(false);
+  // Plano promocional do Mercado Pago (R$ 9,90/mês nos 6 primeiros meses).
+  // O botão de R$ 97/mês só aparece depois que o condomínio já usou a promoção.
+  const PLANO_PROMOCIONAL_ID = "b6d59f07efcd4142b013b9d2f7519261";
+  const jaUsouPromo = condominio.assinaturaPlanoId === PLANO_PROMOCIONAL_ID;
+  async function copiarCodigo() {
+    try {
+      await navigator.clipboard.writeText(condominio.codigoConvite);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = condominio.codigoConvite;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  }
   async function assinar(plano: "promocional" | "mensal") {
     const d = await acao("assinarMercadoPago", { plano });
     if (d?.ok && d.initPoint) {
@@ -1132,7 +1151,10 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
         <div className="cartao">
           <h3>🏢 Dados do condomínio</h3>
           <p><strong>Nome atual:</strong> {condominio.nome}</p>
-          <p><strong>Código de convite:</strong> {condominio.codigoConvite} — passe aos moradores para eles criarem a conta.</p>
+          <p><strong>Código de convite:</strong> {condominio.codigoConvite}{" "}
+            <button className="btn secundario" style={{ padding: "4px 14px", fontSize: 14 }} onClick={copiarCodigo}>{copiado ? "✓ Copiado!" : "Copiar"}</button>
+          </p>
+          <p style={{ fontSize: 13, opacity: 0.8 }}>Passe o código aos moradores para eles criarem a conta.</p>
           <label>Novo nome do condomínio</label>
           <input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} placeholder="Ex.: Condomínio Vila Verde" maxLength={100} />
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -1147,8 +1169,11 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
         <p><strong>Preço:</strong> R$ 9,90/mês nos 6 primeiros meses, depois R$ 97/mês por condomínio. 14 dias grátis, sem cartão. Cancele quando quiser, sem fidelidade e sem multa.</p>
         {condominio.assinaturaStatus !== "ativa" && ehSindico && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button className="btn" onClick={() => assinar("promocional")}>Assinar — R$ 9,90/mês (6 meses)</button>
-            <button className="btn secundario" onClick={() => assinar("mensal")}>Assinar — R$ 97/mês</button>
+            {jaUsouPromo ? (
+              <button className="btn" onClick={() => assinar("mensal")}>Assinar — R$ 97/mês</button>
+            ) : (
+              <button className="btn" onClick={() => assinar("promocional")}>Assinar — R$ 9,90/mês (6 meses)</button>
+            )}
           </div>
         )}
         {condominio.assinaturaStatus === "ativa" && ehSindico && (
