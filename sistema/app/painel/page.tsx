@@ -675,6 +675,10 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
   const [comprovanteUrl, setComprovanteUrl] = useState("");
   const [enviandoComprovante, setEnviandoComprovante] = useState(false);
   const [erroComprovante, setErroComprovante] = useState("");
+  const [anexoNovoUrl, setAnexoNovoUrl] = useState("");
+  const [enviandoAnexoNovo, setEnviandoAnexoNovo] = useState(false);
+  const [anexandoId, setAnexandoId] = useState<string | null>(null);
+  const [enviandoAnexoItem, setEnviandoAnexoItem] = useState(false);
   const [busca, setBusca] = useState("");
   const [filtroMorador, setFiltroMorador] = useState("todos");
   const [filtroDescricao, setFiltroDescricao] = useState("todas");
@@ -728,6 +732,32 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
     }
   }
 
+  // Envia o boleto (PDF ou imagem) do síndico. Sem boletoId, guarda para a
+  // cobrança que está sendo criada; com boletoId, anexa numa já existente.
+  async function enviarAnexoBoleto(arquivo: File, boletoId: string | null) {
+    if (boletoId) setEnviandoAnexoItem(true);
+    else setEnviandoAnexoNovo(true);
+    try {
+      const fd = new FormData();
+      fd.append("foto", arquivo);
+      fd.append("pasta", "anexos");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const d = await res.json();
+      if (!d.ok || !d.url) { setOk(d.erro || "Não foi possível enviar o boleto. Tente novamente."); return; }
+      if (boletoId) {
+        const r = await acao("anexarBoleto", { id: boletoId, url: d.url });
+        if (r?.ok) { setOk("Boleto anexado."); setAnexandoId(null); }
+      } else {
+        setAnexoNovoUrl(d.url);
+      }
+    } catch {
+      setOk("Não foi possível enviar o boleto. Tente novamente.");
+    } finally {
+      if (boletoId) setEnviandoAnexoItem(false);
+      else setEnviandoAnexoNovo(false);
+    }
+  }
+
   return (
     <div>
       <div className="tab-cabecalho">
@@ -777,10 +807,10 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
           <div className="cartao-titulo"><span className="chip-icone chip-roxa pequeno">🧾</span><h3>Nova cobrança</h3></div>
           <form onSubmit={async (e) => {
             e.preventDefault();
-            const d = await acao("criarCobranca", { alvo, descricao, valor: Number(valor), vencimento, recorrente: recorrenteChecked, diaRecorrente: Number(diaRecorrente) });
+            const d = await acao("criarCobranca", { alvo, descricao, valor: Number(valor), vencimento, recorrente: recorrenteChecked, diaRecorrente: Number(diaRecorrente), anexoBoletoUrl: anexoNovoUrl });
             if (d?.ok) {
               setOk(`${d.criadas} cobrança(s) criada(s) e moradores avisados.`);
-              setDescricao(""); setValor(""); setVencimento(""); setRecorrenteChecked(false);
+              setDescricao(""); setValor(""); setVencimento(""); setRecorrenteChecked(false); setAnexoNovoUrl("");
             }
           }}>
             <div className="campo"><label>Para quem</label>
@@ -805,6 +835,21 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
               </div>
               {recorrenteChecked && (
                 <div className="campo"><label>Dia do mês</label><input type="number" min={1} max={28} value={diaRecorrente} onChange={(e) => setDiaRecorrente(e.target.value)} /></div>
+              )}
+            </div>
+            <div className="campo"><label>Anexar boleto (PDF ou imagem, opcional)</label>
+              {anexoNovoUrl ? (
+                <p>✓ Boleto anexado — <a href={srcFoto(anexoNovoUrl)} target="_blank" rel="noreferrer">ver</a>{" "}
+                  <button type="button" className="btn secundario pequeno" onClick={() => setAnexoNovoUrl("")}>Remover</button>
+                </p>
+              ) : (
+                <label className="btn secundario pequeno" style={{ cursor: "pointer" }}>
+                  {enviandoAnexoNovo ? "Enviando..." : "Escolher arquivo"}
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden onChange={(e) => {
+                    const arq = e.target.files?.[0];
+                    if (arq) enviarAnexoBoleto(arq, null);
+                  }} />
+                </label>
               )}
             </div>
             <button className="btn" type="submit">Criar cobrança</button>
@@ -852,6 +897,11 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
           <div className="item-lista-corpo">
             <strong>{b.descricao || "Taxa do condomínio"} — {b.moradorNome}{b.bloco && b.apartamento ? ` · Bloco ${b.bloco}, apto ${b.apartamento}` : ""} — {brl(b.valor)}</strong>
             <div className="item-meta">Vencimento: {dataBR(b.vencimento)}</div>
+            {b.anexoBoletoUrl && (
+              <div style={{ marginTop: 6 }}>
+                <a href={srcFoto(b.anexoBoletoUrl)} target="_blank" rel="noreferrer">📄 Ver boleto</a>
+              </div>
+            )}
             {b.comprovanteUrl && (
               <div style={{ marginTop: 8 }}>
                 <img src={srcFoto(b.comprovanteUrl)} alt="Comprovante" style={{ maxWidth: 220, borderRadius: 12, border: "1px solid var(--border)" }} />
@@ -878,6 +928,34 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
                   </div>
                 )}
                 {erroComprovante && <p style={{ color: "#b91c1c" }}>{erroComprovante}</p>}
+              </div>
+            )}
+            {ehSindico && (
+              <div style={{ marginTop: 8 }}>
+                {anexandoId === b.id ? (
+                  <>
+                    <label className="btn secundario pequeno" style={{ cursor: "pointer" }}>
+                      {enviandoAnexoItem ? "Enviando..." : "Escolher arquivo (PDF ou imagem)"}
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden onChange={(e) => {
+                        const arq = e.target.files?.[0];
+                        if (arq) enviarAnexoBoleto(arq, b.id);
+                      }} />
+                    </label>{" "}
+                    <button className="btn secundario pequeno" onClick={() => setAnexandoId(null)}>Cancelar</button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn secundario pequeno" onClick={() => setAnexandoId(b.id)}>{b.anexoBoletoUrl ? "Trocar boleto" : "📎 Anexar boleto"}</button>
+                    {b.anexoBoletoUrl && (
+                      <>{" "}
+                        <button className="btn secundario pequeno" onClick={async () => {
+                          const d = await acao("anexarBoleto", { id: b.id, url: "" });
+                          if (d?.ok) setOk("Anexo removido.");
+                        }}>Remover anexo</button>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>

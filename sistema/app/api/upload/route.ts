@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, erro: "Upload de fotos indisponível no momento." }, { status: 500 });
   }
   const ext = (arquivo.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-  const nome = `fotos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  // Pasta opcional ("fotos" ou "anexos") só para organizar o Blob.
+  const pasta = form.get("pasta") === "anexos" ? "anexos" : "fotos";
+  const nome = `${pasta}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   // O store do Blob é PRIVADO e rejeita upload público ("Cannot use public
   // access on a private store"). A foto fica privada e é servida pelo
   // proxy /api/foto, que busca o arquivo com o token no servidor — o

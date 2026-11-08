@@ -221,6 +221,7 @@ export async function POST(req: NextRequest) {
       const descricao = String(args.descricao || "").trim() || "Taxa do condomínio";
       const valor = Number(args.valor);
       const vencimento = String(args.vencimento || "");
+      const anexoBoletoUrl = typeof args.anexoBoletoUrl === "string" && args.anexoBoletoUrl.trim() ? args.anexoBoletoUrl.trim() : null;
       if (!valor || valor <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(vencimento)) {
         return Response.json({ ok: false, erro: "Confira descrição, valor e vencimento." }, { status: 400 });
       }
@@ -255,6 +256,7 @@ export async function POST(req: NextRequest) {
           mes,
           descricao,
           comprovanteUrl: null,
+          anexoBoletoUrl,
         });
         criadas++;
       }
@@ -278,6 +280,15 @@ export async function POST(req: NextRequest) {
         });
       }
       return Response.json({ ok: true, criadas });
+    }
+    case "anexarBoleto": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico anexa boletos." }, { status: 403 });
+      const boleto = dados.boletos.find((b) => b.id === args.id);
+      if (!boleto) return Response.json({ ok: false, erro: "Cobrança não encontrada." }, { status: 404 });
+      // url vazia = remover o anexo.
+      boleto.anexoBoletoUrl = typeof args.url === "string" && args.url.trim() ? args.url.trim() : null;
+      await salvar();
+      return Response.json({ ok: true });
     }
     case "cancelarRecorrente": {
       if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico muda a cobrança recorrente." }, { status: 403 });

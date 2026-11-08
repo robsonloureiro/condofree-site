@@ -85,6 +85,7 @@ export interface Boleto {
   mes: string; // YYYY-MM
   descricao?: string | null;
   comprovanteUrl?: string | null;
+  anexoBoletoUrl?: string | null; // boleto (PDF/imagem) anexado pelo síndico
 }
 
 export interface Votacao {
