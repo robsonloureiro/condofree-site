@@ -989,6 +989,7 @@ function FuncionariosTab({ estado, campo, form, setForm, acao, setOk }: TabProps
 
 function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; ehSindico: boolean; acao: (n: string, a?: Record<string, unknown>) => Promise<any>; setOk: (s: string) => void; setErro: (s: string) => void }) {
   const condominio = estado.condominio;
+  const [novoNome, setNovoNome] = useState("");
   async function assinar(plano: "promocional" | "mensal") {
     const d = await acao("assinarMercadoPago", { plano });
     if (d?.ok && d.initPoint) {
@@ -996,8 +997,37 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
       setOk("Abrimos o checkout do Mercado Pago em outra aba. Depois do pagamento, sua assinatura é ativada automaticamente.");
     }
   }
+  async function salvarNome() {
+    const nome = novoNome.trim();
+    if (!nome) {
+      setErro("Informe o novo nome do condomínio.");
+      return;
+    }
+    if (nome === condominio.nome) {
+      setErro("O novo nome é igual ao atual.");
+      return;
+    }
+    const d = await acao("renomearCondominio", { nome });
+    if (d?.ok) {
+      setNovoNome("");
+      setOk("Nome do condomínio atualizado.");
+    }
+  }
   return (
     <div>
+      {ehSindico && (
+        <div className="cartao">
+          <h3>🏢 Dados do condomínio</h3>
+          <p><strong>Nome atual:</strong> {condominio.nome}</p>
+          <p><strong>Código de convite:</strong> {condominio.codigoConvite} — passe aos moradores para eles criarem a conta.</p>
+          <label>Novo nome do condomínio</label>
+          <input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} placeholder="Ex.: Condomínio Vila Verde" maxLength={100} />
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button className="btn" onClick={salvarNome}>Salvar novo nome</button>
+          </div>
+          <p style={{ fontSize: 13, opacity: 0.8 }}>O novo nome aparece no painel de todos os moradores. O código de convite não muda.</p>
+        </div>
+      )}
       <div className="cartao">
         <h2>⭐ Plano e FAQ</h2>
         <p><strong>Status:</strong> {estado.statusAssinatura.texto}</p>

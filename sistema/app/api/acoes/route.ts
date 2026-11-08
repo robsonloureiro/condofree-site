@@ -586,6 +586,20 @@ export async function POST(req: NextRequest) {
       await salvar();
       return Response.json({ ok: true });
     }
+    // ---------- Dados do condomínio ----------
+    case "renomearCondominio": {
+      if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico muda o nome do condomínio." }, { status: 403 });
+      const nome = String(args.nome || "").trim();
+      if (!nome) return Response.json({ ok: false, erro: "Informe o novo nome do condomínio." }, { status: 400 });
+      if (nome.length > 100) return Response.json({ ok: false, erro: "O nome deve ter no máximo 100 caracteres." }, { status: 400 });
+      dados.condominio.nome = nome;
+      const condominios = await listarCondominios();
+      const c = condominios.find((x) => x.id === dados.condominio.id);
+      if (c) c.nome = nome;
+      await salvarCondominios(condominios);
+      await salvar();
+      return Response.json({ ok: true });
+    }
     default:
       return Response.json({ ok: false, erro: "Ação desconhecida." }, { status: 400 });
   }
