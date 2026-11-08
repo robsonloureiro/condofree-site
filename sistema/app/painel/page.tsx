@@ -952,18 +952,48 @@ function VotacoesTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: T
               }}>Encerrar e gerar ata</button>
             )}
             {v.ata && (
-              <div style={{ marginTop: 12 }}>
-                <h4>Ata gerada</h4>
-                <pre style={{ whiteSpace: "pre-wrap", background: "#f2f5f8", padding: 12, borderRadius: 12 }}>{v.ata}</pre>
-                <button className="btn secundario pequeno" onClick={() => {
-                  const blob = new Blob([v.ata], { type: "text/plain" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url; a.download = "ata-votacao.txt"; a.click();
-                  URL.revokeObjectURL(url);
-                }}>Baixar ata (.txt)</button>{" "}
-                <button className="btn secundario pequeno" onClick={() => window.print()}>Imprimir</button>
-              </div>
+              <>
+                <div className="ata-doc">
+                  <div className="ata-cabecalho">
+                    <span className="chip-icone pequeno">🗳️</span>
+                    <div>
+                      <strong>ATA DE VOTAÇÃO</strong>
+                      <span>{estado.condominio.nome}</span>
+                    </div>
+                  </div>
+                  <div className="ata-corpo">
+                    <h4 className="ata-pergunta">{v.pergunta}</h4>
+                    <p className="ata-meta">{v.encerradaEm ? `Encerrada em ${dataBR(v.encerradaEm)} · ` : ""}{v.votos.length} voto(s)</p>
+                    {v.opcoes.map((op: string, i: number) => {
+                      const votosOpcao = v.votos.filter((x: any) => x.opcao === i);
+                      const nomes = votosOpcao.map((x: any) => x.moradorNome).filter(Boolean);
+                      return (
+                        <div key={i} className="ata-opcao">
+                          <div className="ata-opcao-linha">
+                            <strong>{op}</strong>
+                            <strong>{votosOpcao.length} voto(s)</strong>
+                          </div>
+                          <div className="ata-barra">
+                            <div style={{ width: `${v.votos.length ? (votosOpcao.length / v.votos.length) * 100 : 0}%` }} />
+                          </div>
+                          {nomes.length > 0 && <div className="ata-votantes">{nomes.join(", ")}</div>}
+                        </div>
+                      );
+                    })}
+                    <p className="ata-rodape">Documento gerado pelo CondoFree.</p>
+                  </div>
+                </div>
+                <div className="ata-acoes">
+                  <button className="btn secundario pequeno" onClick={() => {
+                    const blob = new Blob([v.ata], { type: "text/plain" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url; a.download = "ata-votacao.txt"; a.click();
+                    URL.revokeObjectURL(url);
+                  }}>Baixar ata (.txt)</button>
+                  <button className="btn secundario pequeno" onClick={() => window.print()}>Imprimir</button>
+                </div>
+              </>
             )}
           </div>
         );

@@ -471,3 +471,21 @@ table.tabela th, table.tabela td { text-align: left; padding: 8px; border-bottom
   .item-lista { flex-wrap: wrap; }
   .item-lista-lado { flex-direction: row; flex-wrap: wrap; align-items: center; width: 100%; }
 }
+
+/* Ata de votação — documento formatado (só exibição; a string v.ata não muda). */
+.ata-doc { margin-top: 12px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: #fff; }
+.ata-cabecalho { background: var(--navy); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.ata-cabecalho .chip-icone { background: rgba(255, 255, 255, .15); }
+.ata-cabecalho strong { display: block; font-size: 16px; letter-spacing: .5px; }
+.ata-cabecalho span { font-size: 13px; opacity: .85; }
+.ata-corpo { padding: 16px; }
+.ata-pergunta { margin: 0 0 4px; font-size: 19px; color: var(--navy); }
+.ata-meta { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+.ata-opcao { margin: 12px 0; }
+.ata-opcao-linha { display: flex; justify-content: space-between; gap: 8px; }
+.ata-opcao-linha strong { color: var(--navy); }
+.ata-barra { background: #e5e7eb; border-radius: 8px; height: 10px; margin-top: 6px; }
+.ata-barra > div { background: #22a06b; height: 10px; border-radius: 8px; }
+.ata-votantes { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.ata-rodape { margin: 14px 0 0; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.ata-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
