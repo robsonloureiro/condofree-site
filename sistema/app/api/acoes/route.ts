@@ -18,6 +18,25 @@ const PLANOS_MP = {
   },
 } as const;
 
+// Descrição do lançamento no Financeiro: a cobrança é da unidade, então
+// mostra bloco+apto (ex.: "Taxa do condomínio — Bloco A, apto 101") em vez
+// do nome do morador. Para cobranças antigas sem unidade na cobrança,
+// busca a unidade do morador; sem ela, mantém o nome.
+function descricaoLancamentoCobranca(boleto: any, moradores: any[]): string {
+  const tipo = boleto.descricao || "Taxa do condomínio";
+  let bloco = boleto.bloco || null;
+  let apartamento = boleto.apartamento || null;
+  if ((!bloco || !apartamento) && boleto.moradorId) {
+    const m = moradores.find((x) => x.id === boleto.moradorId);
+    if (m) {
+      bloco = m.bloco;
+      apartamento = m.apartamento;
+    }
+  }
+  if (bloco && apartamento) return `${tipo} — Bloco ${bloco}, apto ${apartamento}`;
+  return `Cobrança — ${boleto.moradorNome}`;
+}
+
 function conflito(reservas: DadosCondominio["reservas"], espacoId: string, data: string, inicio: string, fim: string, ignorarId?: string): boolean {
   return reservas.some(
     (r) =>
@@ -308,7 +327,7 @@ export async function POST(req: NextRequest) {
           id: novoId("lan"),
           tipo: "receita",
           categoria: "boleto",
-          descricao: `Cobrança — ${boleto.moradorNome}`,
+          descricao: descricaoLancamentoCobranca(boleto, dados.moradores),
           valor: boleto.valor,
           data: new Date().toISOString().slice(0, 10),
           pago: true,
@@ -358,7 +377,7 @@ export async function POST(req: NextRequest) {
             id: novoId("lan"),
             tipo: "receita",
             categoria: "boleto",
-            descricao: `Cobrança — ${boleto.moradorNome}`,
+            descricao: descricaoLancamentoCobranca(boleto, dados.moradores),
             valor: boleto.valor,
             data: new Date().toISOString().slice(0, 10),
             pago: true,
