@@ -299,12 +299,10 @@ export default function Painel() {
             </div>
 
             <div className="cartao home-boasvindas">
-              <div>
-                <h2>Bem-vindo ao <span>CondoFree</span></h2>
-                <p>Mais controle, zero burocracia. Reserve espaços, leia avisos, abra ocorrências, veja cobranças e participe das votações.</p>
-                <p style={{ color: "#5b6b7d" }}>Código de convite do condomínio: <strong>{estado.condominio.codigoConvite}</strong>{" "}
-                  <button className="btn secundario" style={{ padding: "4px 14px", fontSize: 14 }} onClick={copiarCodigoInicio}>{copiadoInicio ? "✓ Copiado!" : "Copiar"}</button>
-                  {" "}— passe aos moradores para eles criarem a conta.</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <BotaoInstalarApp />
+                <span style={{ color: "#5b6b7d" }}>Código de convite: <strong style={{ color: "var(--navy)" }}>{estado.condominio.codigoConvite}</strong></span>
+                <button className="btn secundario" style={{ padding: "4px 14px", fontSize: 14 }} onClick={copiarCodigoInicio}>{copiadoInicio ? "✓ Copiado!" : "Copiar"}</button>
               </div>
             </div>
 
@@ -1651,6 +1649,65 @@ function urlBase64ParaUint8Array(base64: string) {
 // instalação (Android/Chrome). O navegador NÃO deixa mostrar o convite
 // nativo sozinho ao entrar no site — o convite só abre quando a pessoa
 // toca em "Instalar". No iPhone, mostra o passo a passo do Safari.
+// Botão "Baixar o app" do cartão da tela inicial: chama o mesmo prompt de
+// instalação do banner e da aba Ajuda (beforeinstallprompt). No iPhone não
+// há prompt — mostra as instruções do Safari. Quando o app já está
+// instalado (evento appinstalled), o botão some.
+function BotaoInstalarApp() {
+  const [instalado, setInstalado] = useState(false);
+  const [ehIos, setEhIos] = useState(false);
+  const [promptInstalacao, setPromptInstalacao] = useState<BeforeInstallPromptEvent | null>(null);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    setEhIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
+    setInstalado(
+      window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as unknown as { standalone?: boolean }).standalone === true,
+    );
+    const aoPerguntar = (e: Event) => {
+      e.preventDefault();
+      setPromptInstalacao(e as unknown as BeforeInstallPromptEvent);
+    };
+    const aoInstalar = () => setInstalado(true);
+    window.addEventListener("beforeinstallprompt", aoPerguntar);
+    window.addEventListener("appinstalled", aoInstalar);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", aoPerguntar);
+      window.removeEventListener("appinstalled", aoInstalar);
+    };
+  }, []);
+
+  if (instalado) return null;
+
+  async function instalar() {
+    if (promptInstalacao) {
+      try {
+        promptInstalacao.prompt();
+      } catch {
+        setMsg("No menu do navegador, procure “Instalar app” ou “Adicionar à tela inicial”.");
+        return;
+      }
+      const escolha = await promptInstalacao.userChoice;
+      if (escolha.outcome === "accepted") { setInstalado(true); return; }
+      setPromptInstalacao(null);
+      return;
+    }
+    if (ehIos) {
+      setMsg("No iPhone: toque no botão Compartilhar do Safari e depois em “Adicionar à Tela de Início”.");
+      return;
+    }
+    setMsg("No menu do navegador, procure “Instalar app” ou “Adicionar à tela inicial”.");
+  }
+
+  return (
+    <>
+      <button className="btn" onClick={instalar}>📱 Baixar o app</button>
+      {msg && <span style={{ color: "#5b6b7d", fontSize: 14, flexBasis: "100%" }}>{msg}</span>}
+    </>
+  );
+}
+
 function BannerInstalar() {
   const [promptInstalacao, setPromptInstalacao] = useState<BeforeInstallPromptEvent | null>(null);
   const [ehIos, setEhIos] = useState(false);
@@ -1671,16 +1728,26 @@ function BannerInstalar() {
       setPromptInstalacao(e as unknown as BeforeInstallPromptEvent);
       setVisivel(true);
     };
+    const aoInstalar = () => setInstalado(true);
     window.addEventListener("beforeinstallprompt", aoPerguntar);
+    window.addEventListener("appinstalled", aoInstalar);
     if (ios) setVisivel(true);
-    return () => window.removeEventListener("beforeinstallprompt", aoPerguntar);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", aoPerguntar);
+      window.removeEventListener("appinstalled", aoInstalar);
+    };
   }, []);
 
   if (instalado || !visivel) return null;
 
   async function instalar() {
     if (promptInstalacao) {
-      promptInstalacao.prompt();
+      try {
+        promptInstalacao.prompt();
+      } catch {
+        setMsgIos(true);
+        return;
+      }
       const escolha = await promptInstalacao.userChoice;
       if (escolha.outcome === "accepted") { setInstalado(true); return; }
       setPromptInstalacao(null);
@@ -1749,7 +1816,9 @@ function AppENotificacoes({ ehSindico }: { ehSindico: boolean }) {
       e.preventDefault();
       setPromptInstalacao(e as unknown as BeforeInstallPromptEvent);
     };
+    const aoInstalar = () => setInstalado(true);
     window.addEventListener("beforeinstallprompt", aoPerguntar);
+    window.addEventListener("appinstalled", aoInstalar);
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setNotif("sem-suporte");
       return;
@@ -1758,12 +1827,20 @@ function AppENotificacoes({ ehSindico }: { ehSindico: boolean }) {
       .then((reg) => reg.pushManager.getSubscription())
       .then((sub) => setNotif(sub ? "ativo" : "inativo"))
       .catch(() => setNotif("inativo"));
-    return () => window.removeEventListener("beforeinstallprompt", aoPerguntar);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", aoPerguntar);
+      window.removeEventListener("appinstalled", aoInstalar);
+    };
   }, []);
 
   async function instalar() {
     if (promptInstalacao) {
-      promptInstalacao.prompt();
+      try {
+        promptInstalacao.prompt();
+      } catch {
+        setMsg("No menu do navegador, procure “Instalar app” ou “Adicionar à tela inicial”.");
+        return;
+      }
       const escolha = await promptInstalacao.userChoice;
       if (escolha.outcome === "accepted") setInstalado(true);
       setPromptInstalacao(null);
