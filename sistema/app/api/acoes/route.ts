@@ -207,17 +207,28 @@ export async function POST(req: NextRequest) {
       }
       const mes = vencimento.slice(0, 7);
       const alvo = String(args.alvo || "todos");
-      const alvos = alvo === "todos"
-        ? dados.moradores
-        : dados.moradores.filter((m) => m.id === alvo);
-      if (alvos.length === 0) return Response.json({ ok: false, erro: "Escolha para quem é a cobrança." }, { status: 400 });
+      // Cobrança é por UNIDADE (bloco+apartamento), não por pessoa: se um
+      // apto tem 3 moradores, gera 1 cobrança só, vista pelos 3.
+      const mesmaUnidade = (b: any, bloco: string, apartamento: string, moradorId: string) =>
+        b.bloco && b.apartamento
+          ? b.bloco.toLowerCase() === bloco.toLowerCase() && b.apartamento === apartamento
+          : b.moradorId === moradorId;
+      const unidades = new Map<string, { morador: any; bloco: string; apartamento: string }>();
+      const candidatos = alvo === "todos" ? dados.moradores : dados.moradores.filter((m) => m.id === alvo);
+      for (const m of candidatos) {
+        const chave = `${m.bloco.toLowerCase()}|${m.apartamento}`;
+        if (!unidades.has(chave)) unidades.set(chave, { morador: m, bloco: m.bloco, apartamento: m.apartamento });
+      }
+      if (unidades.size === 0) return Response.json({ ok: false, erro: "Escolha para quem é a cobrança." }, { status: 400 });
       let criadas = 0;
-      for (const morador of alvos) {
-        if (dados.boletos.some((b) => b.moradorId === morador.id && b.mes === mes && (b.descricao || "") === descricao)) continue;
+      for (const { morador, bloco, apartamento } of unidades.values()) {
+        if (dados.boletos.some((b) => b.mes === mes && (b.descricao || "") === descricao && mesmaUnidade(b, bloco, apartamento, morador.id))) continue;
         dados.boletos.push({
           id: novoId("bol"),
           moradorId: morador.id,
           moradorNome: morador.nome,
+          bloco,
+          apartamento,
           valor,
           vencimento,
           status: "pendente",
@@ -234,8 +245,11 @@ export async function POST(req: NextRequest) {
         dados.condominio.cobrancaRecorrente = { dia, valor, descricao };
       }
       await salvar();
-      // Avisa os moradores cobrados (não trava se falhar).
-      const ids = alvos
+      // Avisa todos os moradores das unidades cobradas — os 3 do mesmo
+      // apto recebem, não só 1 (não trava se falhar).
+      const chavesUnidades = new Set([...unidades.values()].map((u) => `${u.bloco.toLowerCase()}|${u.apartamento}`));
+      const ids = dados.moradores
+        .filter((m) => chavesUnidades.has(`${m.bloco.toLowerCase()}|${m.apartamento}`))
         .map((m) => m.usuarioId)
         .filter((id): id is string => Boolean(id));
       if (ids.length > 0) {
@@ -262,8 +276,13 @@ export async function POST(req: NextRequest) {
     case "marcarPagoMorador": {
       const boleto = dados.boletos.find((b) => b.id === args.id);
       if (!boleto) return Response.json({ ok: false, erro: "Cobrança não encontrada." }, { status: 404 });
-      if (!ehSindico && (!eu || boleto.moradorId !== eu.id)) {
-        return Response.json({ ok: false, erro: "Essa cobrança não é sua." }, { status: 403 });
+      // Qualquer morador da unidade pode marcar como pago (a cobrança é da
+      // unidade, não só da pessoa em cujo nome ela foi criada).
+      const daMinhaUnidade =
+        eu && boleto.bloco && boleto.apartamento &&
+        boleto.bloco.toLowerCase() === eu.bloco.toLowerCase() && boleto.apartamento === eu.apartamento;
+      if (!ehSindico && (!eu || (boleto.moradorId !== eu.id && !daMinhaUnidade))) {
+        return Response.json({ ok: false, erro: "Essa cobrança não é da sua unidade." }, { status: 403 });
       }
       if (boleto.status === "pago") return Response.json({ ok: false, erro: "Essa cobrança já foi confirmada." }, { status: 400 });
       boleto.status = "aguardando";
@@ -411,9 +430,6 @@ export async function POST(req: NextRequest) {
     case "criarMorador": {
       if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico cadastra moradores." }, { status: 403 });
       if (!args.nome || !args.bloco || !args.apartamento) return Response.json({ ok: false, erro: "Preencha nome, bloco e apartamento." }, { status: 400 });
-      if (dados.moradores.some((m) => m.bloco.toLowerCase() === String(args.bloco).toLowerCase() && m.apartamento === String(args.apartamento))) {
-        return Response.json({ ok: false, erro: "Essa unidade já tem um morador cadastrado." }, { status: 400 });
-      }
       dados.moradores.push({
         id: novoId("mor"),
         usuarioId: null,
@@ -429,13 +445,6 @@ export async function POST(req: NextRequest) {
       if (!ehSindico) return Response.json({ ok: false, erro: "Só o síndico edita moradores." }, { status: 403 });
       const morador = dados.moradores.find((m) => m.id === args.id);
       if (!morador) return Response.json({ ok: false, erro: "Morador não encontrado." }, { status: 404 });
-      if (
-        dados.moradores.some(
-          (m) => m.id !== morador.id && m.bloco.toLowerCase() === String(args.bloco).toLowerCase() && m.apartamento === String(args.apartamento)
-        )
-      ) {
-        return Response.json({ ok: false, erro: "Essa unidade já pertence a outro morador." }, { status: 400 });
-      }
       morador.nome = String(args.nome);
       morador.bloco = String(args.bloco);
       morador.apartamento = String(args.apartamento);

@@ -20,7 +20,11 @@ export async function GET() {
   const status = statusAssinatura(dados.condominio);
   const meusBoletos =
     usuario.papel === "morador" && eu
-      ? dados.boletos.filter((b) => b.moradorId === eu.id)
+      ? dados.boletos.filter(
+          (b) =>
+            b.moradorId === eu.id ||
+            (b.bloco && b.apartamento && b.bloco.toLowerCase() === eu.bloco.toLowerCase() && b.apartamento === eu.apartamento),
+        )
       : dados.boletos;
   const lancamentos =
     usuario.papel === "sindico" ? dados.lancamentos : [];

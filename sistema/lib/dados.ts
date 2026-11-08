@@ -15,16 +15,29 @@ export function gerarCobrancasRecorrentes(dados: DadosCondominio): boolean {
   if (hoje.getDate() < dia) return false;
   const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
   const vencimento = `${mes}-${String(Math.min(dia, ultimoDia)).padStart(2, "0")}`;
+  // Uma cobrança por unidade, não por pessoa.
+  const unidades = new Map<string, { morador: any; bloco: string; apartamento: string }>();
+  for (const m of dados.moradores) {
+    const chave = `${m.bloco.toLowerCase()}|${m.apartamento}`;
+    if (!unidades.has(chave)) unidades.set(chave, { morador: m, bloco: m.bloco, apartamento: m.apartamento });
+  }
   let criou = false;
-  for (const morador of dados.moradores) {
+  for (const { morador, bloco, apartamento } of unidades.values()) {
     const jaExiste = dados.boletos.some(
-      (b) => b.moradorId === morador.id && b.mes === mes && (b.descricao || "") === tpl.descricao,
+      (b) =>
+        b.mes === mes &&
+        (b.descricao || "") === tpl.descricao &&
+        (b.bloco && b.apartamento
+          ? b.bloco.toLowerCase() === bloco.toLowerCase() && b.apartamento === apartamento
+          : b.moradorId === morador.id),
     );
     if (jaExiste) continue;
     dados.boletos.push({
       id: novoId("bol"),
       moradorId: morador.id,
       moradorNome: morador.nome,
+      bloco,
+      apartamento,
       valor: tpl.valor,
       vencimento,
       status: "pendente",

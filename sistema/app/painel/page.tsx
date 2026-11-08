@@ -675,6 +675,26 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
   const [comprovanteUrl, setComprovanteUrl] = useState("");
   const [enviandoComprovante, setEnviandoComprovante] = useState(false);
   const [erroComprovante, setErroComprovante] = useState("");
+  const [busca, setBusca] = useState("");
+  const [filtroMorador, setFiltroMorador] = useState("todos");
+  const [filtroDescricao, setFiltroDescricao] = useState("todas");
+  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const descricoes: string[] = [...new Set<string>(estado.boletos.map((b: any) => (b.descricao || "Taxa do condomínio") as string))].sort();
+  const filtrosAtivos = busca.trim() !== "" || filtroMorador !== "todos" || filtroDescricao !== "todas" || filtroStatus !== "todos";
+  const boletosFiltrados = estado.boletos.filter((b: any) => {
+    const desc = b.descricao || "Taxa do condomínio";
+    if (busca.trim() !== "") {
+      const q = busca.trim().toLowerCase();
+      if (!b.moradorNome.toLowerCase().includes(q) && !desc.toLowerCase().includes(q)) return false;
+    }
+    if (ehSindico && filtroMorador !== "todos" && b.moradorId !== filtroMorador) return false;
+    if (filtroDescricao !== "todas" && desc !== filtroDescricao) return false;
+    if (filtroStatus !== "todos" && b.status !== filtroStatus) return false;
+    return true;
+  });
+  function limparFiltros() {
+    setBusca(""); setFiltroMorador("todos"); setFiltroDescricao("todas"); setFiltroStatus("todos");
+  }
 
   async function copiarPix() {
     try {
@@ -764,7 +784,7 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
             }
           }}>
             <div className="campo"><label>Para quem</label>
-              <select value={alvo} onChange={(e) => setAlvo(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 10, fontSize: 15, background: "#fff" }}>
+              <select value={alvo} onChange={(e) => setAlvo(e.target.value)}>
                 <option value="todos">Todos os moradores</option>
                 {estado.moradores.map((m: any) => (
                   <option key={m.id} value={m.id}>{m.nome} — Bloco {m.bloco}, apto {m.apartamento}</option>
@@ -792,11 +812,45 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
         </div>
       )}
 
-      {estado.boletos.map((b: any) => (
+      <div className="cartao">
+        <div className="campo"><label>Buscar</label><input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por morador ou descrição..." /></div>
+        <div className="linha">
+          {ehSindico && (
+            <div className="campo"><label>Morador</label>
+              <select value={filtroMorador} onChange={(e) => setFiltroMorador(e.target.value)}>
+                <option value="todos">Todos os moradores</option>
+                {estado.moradores.map((m: any) => (
+                  <option key={m.id} value={m.id}>{m.nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="campo"><label>Descrição</label>
+            <select value={filtroDescricao} onChange={(e) => setFiltroDescricao(e.target.value)}>
+              <option value="todas">Todas as descrições</option>
+              {descricoes.map((d: string) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+          <div className="campo"><label>Status</label>
+            <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+              <option value="todos">Todos os status</option>
+              <option value="pendente">Pendente</option>
+              <option value="aguardando">Aguardando confirmação</option>
+              <option value="pago">Pago</option>
+              <option value="vencido">Vencido</option>
+            </select>
+          </div>
+        </div>
+        <p style={{ color: "#5b6b7d", fontSize: 14 }}>{boletosFiltrados.length} cobrança(s){filtrosAtivos && (<>{" "}<button className="btn secundario pequeno" onClick={limparFiltros}>Limpar filtros</button></>)}</p>
+      </div>
+
+      {boletosFiltrados.map((b: any) => (
         <div key={b.id} className="item-lista">
           <span className={`chip-icone pequeno ${b.status === "pago" ? "chip-verde" : b.status === "aguardando" ? "chip-azul" : b.status === "pendente" ? "chip-amarela" : "chip-rosa"}`}>🧾</span>
           <div className="item-lista-corpo">
-            <strong>{b.descricao || "Taxa do condomínio"} — {b.moradorNome} — {brl(b.valor)}</strong>
+            <strong>{b.descricao || "Taxa do condomínio"} — {b.moradorNome}{b.bloco && b.apartamento ? ` · Bloco ${b.bloco}, apto ${b.apartamento}` : ""} — {brl(b.valor)}</strong>
             <div className="item-meta">Vencimento: {dataBR(b.vencimento)}</div>
             {b.comprovanteUrl && (
               <div style={{ marginTop: 8 }}>
@@ -850,7 +904,7 @@ function CobrancasTab({ estado, ehSindico, acao, setOk }: TabProps) {
           </div>
         </div>
       ))}
-      {estado.boletos.length === 0 && <div className="cartao"><p>Nenhuma cobrança ainda.</p></div>}
+      {boletosFiltrados.length === 0 && <div className="cartao"><p>{estado.boletos.length === 0 ? "Nenhuma cobrança ainda." : "Nenhuma cobrança encontrada com esses filtros."}</p></div>}
     </div>
   );
 }

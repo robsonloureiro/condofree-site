@@ -23,15 +23,8 @@ export async function POST(req: NextRequest) {
   if (!dados) {
     return Response.json({ ok: false, erro: "Condomínio não encontrado." }, { status: 400 });
   }
-  const unidadeOcupada = dados.moradores.find(
-    (m) => m.bloco.toLowerCase() === String(bloco).toLowerCase() && m.apartamento === String(apartamento)
-  );
-  if (unidadeOcupada) {
-    return Response.json(
-      { ok: false, erro: `A unidade Bloco ${bloco} — ${apartamento} já tem um morador cadastrado. Confira o bloco e o apartamento ou fale com o síndico.` },
-      { status: 400 }
-    );
-  }
+  // Várias pessoas podem morar na mesma unidade (ex.: 3 no mesmo apto):
+  // cada uma tem conta própria, mas a cobrança é uma só por unidade.
   const usuarios = await listarUsuarios();
   if (usuarios.some((u) => u.email.toLowerCase() === String(email).toLowerCase())) {
     return Response.json({ ok: false, erro: "Já existe uma conta com esse e-mail." }, { status: 400 });

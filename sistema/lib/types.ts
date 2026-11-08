@@ -76,6 +76,8 @@ export interface Boleto {
   id: string;
   moradorId: string;
   moradorNome: string;
+  bloco?: string | null; // cobrança é por unidade: os 3 moradores do apto veem a mesma
+  apartamento?: string | null;
   valor: number;
   vencimento: string; // YYYY-MM-DD
   status: "pendente" | "aguardando" | "pago" | "vencido"; // aguardando = morador marcou pago, síndico ainda não confirmou
