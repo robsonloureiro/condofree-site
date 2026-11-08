@@ -44,6 +44,22 @@ export default function Painel() {
   const [gaveta, setGaveta] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
   const [editandoMorador, setEditandoMorador] = useState<any>(null);
+  const [copiadoInicio, setCopiadoInicio] = useState(false);
+  async function copiarCodigoInicio() {
+    if (!estado?.condominio?.codigoConvite) return;
+    try {
+      await navigator.clipboard.writeText(estado.condominio.codigoConvite);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = estado.condominio.codigoConvite;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopiadoInicio(true);
+    setTimeout(() => setCopiadoInicio(false), 2000);
+  }
 
   const carregar = useCallback(async () => {
     const res = await fetch("/api/estado", { cache: "no-store" });
@@ -286,7 +302,9 @@ export default function Painel() {
               <div>
                 <h2>Bem-vindo ao <span>CondoFree</span></h2>
                 <p>Mais controle, zero burocracia. Reserve espaços, leia avisos, abra ocorrências, veja boletos e participe das votações.</p>
-                <p style={{ color: "#5b6b7d" }}>Código de convite do condomínio: <strong>{estado.condominio.codigoConvite}</strong> — passe aos moradores para eles criarem a conta.</p>
+                <p style={{ color: "#5b6b7d" }}>Código de convite do condomínio: <strong>{estado.condominio.codigoConvite}</strong>{" "}
+                  <button className="btn secundario" style={{ padding: "4px 14px", fontSize: 14 }} onClick={copiarCodigoInicio}>{copiadoInicio ? "✓ Copiado!" : "Copiar"}</button>
+                  {" "}— passe aos moradores para eles criarem a conta.</p>
               </div>
             </div>
 
@@ -496,6 +514,9 @@ function AvisosTab({ estado, ehSindico, campo, form, setForm, acao, setOk }: Tab
             <div className="campo"><label>Título</label><input {...campo("tituloAviso")} /></div>
             <div className="campo"><label>Texto</label><textarea rows={3} {...campo("textoAviso")} /></div>
             <button className="btn" type="submit">Publicar aviso</button>
+            {ehSindico && (
+              <ContadorPush texto={(com, total) => `${com} de ${total} morador(es) vão receber este aviso por notificação.`} />
+            )}
           </form>
         </div>
       )}
@@ -1372,6 +1393,25 @@ function BannerInstalar() {
   );
 }
 
+// Contador de moradores com notificações ativadas (só o síndico vê).
+// Responde "quantos vão receber de verdade" quando ele publica um aviso.
+function ContadorPush({ texto }: { texto: (com: number, total: number) => string }) {
+  const [resumo, setResumo] = useState<{ moradores: number; comNotificacao: number } | null>(null);
+  useEffect(() => {
+    fetch("/api/push/resumo")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ok) setResumo({ moradores: d.moradores, comNotificacao: d.comNotificacao });
+      })
+      .catch(() => {});
+  }, []);
+  if (!resumo) return null;
+  if (resumo.moradores === 0) {
+    return <p style={{ color: "#5b6b7d", marginTop: 8 }}>📬 Nenhum morador cadastrado ainda — cadastre moradores para eles receberem seus avisos por notificação.</p>;
+  }
+  return <p style={{ color: "#5b6b7d", marginTop: 8 }}>📬 {texto(resumo.comNotificacao, resumo.moradores)}</p>;
+}
+
 // Instalar o CondoFree como app + ativar notificações. O botão de
 // instalar só aparece quando o navegador oferece (Android/Chrome); no
 // iPhone a instalação é pelo Safari, "Adicionar à Tela de Início".
@@ -1525,6 +1565,9 @@ function AppENotificacoes({ ehSindico }: { ehSindico: boolean }) {
             </button>
           )}
         </div>
+      )}
+      {ehSindico && (
+        <ContadorPush texto={(com, total) => `${com} de ${total} morador(es) com notificações ativadas — eles recebem seus avisos e votações.`} />
       )}
       {msg && <p style={{ color: "#5b6b7d", marginTop: 8 }}>{msg}</p>}
     </div>
