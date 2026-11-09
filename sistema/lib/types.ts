@@ -91,6 +91,8 @@ export interface Ocorrencia {
   moradorId: string;
   moradorNome: string;
   criadoEm: string;
+  // Mensagem privada ao síndico: só o síndico e quem criou veem.
+  privada?: boolean;
 }
 
 export interface Boleto {

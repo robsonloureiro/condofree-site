@@ -579,6 +579,7 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
   const [fotoUrl, setFotoUrl] = useState("");
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const [erroFoto, setErroFoto] = useState("");
+  const [privada, setPrivada] = useState(false);
   async function enviarFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
     if (!arquivo) return;
@@ -603,15 +604,15 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
         <span className="chip-icone chip-laranja">🔧</span>
         <div>
           <h2>Ocorrências</h2>
-          <p>Avise o síndico sobre algo que precisa de reparo, com foto e local. Acompanhe o status aqui.</p>
+          <p>Avise o síndico sobre algo que precisa de reparo, com foto e local — ou mande uma mensagem só para ele. Acompanhe o status aqui.</p>
         </div>
       </div>
       <div className="cartao">
         <div className="cartao-titulo"><span className="chip-icone chip-laranja pequeno">🔧</span><h3>Nova ocorrência</h3></div>
         <form onSubmit={async (e) => {
           e.preventDefault();
-          const d = await acao("criarOcorrencia", { titulo: form.tituloOc, descricao: form.descOc, local: form.localOc, fotoUrl });
-          if (d?.ok) { setOk("Ocorrência registrada."); setForm({}); setFotoUrl(""); }
+          const d = await acao("criarOcorrencia", { titulo: form.tituloOc, descricao: form.descOc, local: form.localOc, fotoUrl, privada });
+          if (d?.ok) { setOk(privada ? "Mensagem enviada ao síndico." : "Ocorrência registrada."); setForm({}); setFotoUrl(""); setPrivada(false); }
         }}>
           <div className="campo"><label>Título</label><input {...campo("tituloOc")} placeholder="Ex.: Lâmpada queimada" /></div>
           <div className="campo"><label>Descrição</label><textarea rows={3} {...campo("descOc")} /></div>
@@ -623,6 +624,21 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
             {erroFoto && <p style={{ color: "#b91c1c" }}>{erroFoto}</p>}
             {fotoUrl && <p style={{ color: "#166534" }}>Foto anexada ✓</p>}
           </div>
+          {!ehSindico && (
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", margin: "4px 0 12px", color: "#0b2a4a", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={privada}
+                onChange={(e) => setPrivada(e.target.checked)}
+                style={{ marginTop: 3, width: 18, height: 18, accentColor: "#22a06b" }}
+              />
+              <span>
+                <strong>🔒 Enviar só para o síndico (mensagem privada)</strong>
+                <br />
+                <span style={{ color: "#5b6b7d", fontSize: 14 }}>Os outros moradores não vão ver esta mensagem.</span>
+              </span>
+            </label>
+          )}
           <button className="btn" type="submit">Registrar ocorrência</button>
         </form>
       </div>
@@ -639,6 +655,7 @@ function OcorrenciasTab({ estado, ehSindico, campo, form, setForm, acao, setOk }
             )}
           </div>
           <div className="item-lista-lado">
+            {o.privada && <span className="etiqueta azul">🔒 Privado</span>}
             {o.status === "aberta" && <span className="etiqueta vermelha">aberta</span>}
             {o.status === "em_andamento" && <span className="etiqueta amber">em andamento</span>}
             {o.status === "resolvida" && <span className="etiqueta verde">resolvida</span>}

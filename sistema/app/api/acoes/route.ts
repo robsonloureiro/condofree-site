@@ -186,6 +186,9 @@ export async function POST(req: NextRequest) {
     case "criarOcorrencia": {
       if (!eu && !ehSindico) return Response.json({ ok: false, erro: "Cadastre-se como morador primeiro." }, { status: 400 });
       if (!args.titulo || !args.descricao) return Response.json({ ok: false, erro: "Informe título e descrição." }, { status: 400 });
+      // Só o morador pode marcar como privada (mensagem só para o síndico);
+      // ocorrência do síndico é sempre visível a todos.
+      const privada = !ehSindico && args.privada === true;
       dados.ocorrencias.unshift({
         id: novoId("oc"),
         titulo: String(args.titulo),
@@ -196,12 +199,13 @@ export async function POST(req: NextRequest) {
         moradorId: eu?.id || "sindico",
         moradorNome: ehSindico ? usuario.nome : eu!.nome,
         criadoEm: hojeISO(),
+        privada,
       });
       await salvar();
       // Avisa o síndico quando um morador abre ocorrência (não trava se falhar).
       if (!ehSindico) {
         await enviarPushParaSindico(dados.condominio.id, {
-          titulo: "Nova ocorrência 🔧",
+          titulo: privada ? "Nova mensagem privada 🔒" : "Nova ocorrência 🔧",
           corpo: `${String(args.titulo)} — ${eu!.nome}.`,
         });
       }

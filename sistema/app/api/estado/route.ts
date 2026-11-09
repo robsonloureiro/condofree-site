@@ -28,6 +28,12 @@ export async function GET() {
       : dados.boletos;
   const lancamentos =
     usuario.papel === "sindico" ? dados.lancamentos : [];
+  // Ocorrência privada (mensagem só para o síndico): o morador só recebe
+  // as públicas e as privadas que ele mesmo criou; o síndico vê todas.
+  const ocorrencias =
+    usuario.papel === "sindico"
+      ? dados.ocorrencias
+      : dados.ocorrencias.filter((o) => !o.privada || (eu && o.moradorId === eu.id));
   const resumoFinanceiro = (() => {
     const mes = new Date().toISOString().slice(0, 7);
     const doMes = dados.lancamentos.filter((l) => l.data.slice(0, 7) === mes);
@@ -47,7 +53,7 @@ export async function GET() {
     espacos: dados.espacos,
     reservas: dados.reservas,
     avisos: dados.avisos,
-    ocorrencias: dados.ocorrencias,
+    ocorrencias,
     boletos: meusBoletos,
     votacoes: dados.votacoes,
     lancamentos,
