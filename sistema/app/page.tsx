@@ -52,11 +52,24 @@ export default function Login() {
     senha: "",
   });
 
+  // Para onde ir depois do login: o parâmetro ?next= (só caminho interno,
+  // começando com "/" e sem "//" para não virar redirecionamento externo).
+  function destinoAposLogin(): string {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next") || "";
+      if (next.startsWith("/") && !next.startsWith("//")) return next;
+    } catch {
+      // ignora e usa o padrão
+    }
+    return "/painel";
+  }
+
   useEffect(() => {
     fetch("/api/auth/login")
       .then((r) => r.json())
       .then((d) => {
-        if (d.autenticado) router.replace("/painel");
+        if (d.autenticado) router.replace(destinoAposLogin());
       })
       .catch(() => undefined);
     const params = new URLSearchParams(window.location.search);
@@ -101,7 +114,7 @@ export default function Login() {
         setErro(d.erro || "Não foi possível continuar.");
         return;
       }
-      router.replace("/painel");
+      router.replace(destinoAposLogin());
     } catch {
       setErro("Falha de conexão. Tente novamente.");
     } finally {

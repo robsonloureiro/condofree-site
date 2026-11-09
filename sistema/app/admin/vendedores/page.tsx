@@ -29,7 +29,7 @@ export default function AdminVendedores() {
       const d = await r.json();
       if (!d.ok) {
         setErro(d.erro || "Não foi possível carregar.");
-        if (r.status === 401) router.replace("/");
+        if (r.status === 401) router.replace("/?next=/admin/vendedores");
         return;
       }
       setDados(d);
