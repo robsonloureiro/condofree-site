@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import CampoSenha from "../../components/CampoSenha";
 
 function brl(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -16,6 +17,9 @@ export default function AdminVendedores() {
   const [criando, setCriando] = useState(false);
   const [copiado, setCopiado] = useState("");
   const [vinculando, setVinculando] = useState("");
+  const [redefinindoId, setRedefinindoId] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [salvandoSenha, setSalvandoSenha] = useState(false);
 
   async function carregar() {
     setCarregando(true);
@@ -76,6 +80,61 @@ export default function AdminVendedores() {
       });
       const d = await res.json();
       if (!d.ok) setErro(d.erro || "Não foi possível alterar.");
+      await carregar();
+    } catch {
+      setErro("Falha de conexão. Tente novamente.");
+    }
+  }
+
+  async function redefinirSenha(id: string) {
+    setErro("");
+    setOk("");
+    if (novaSenha.length < 6) {
+      setErro("A nova senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+    setSalvandoSenha(true);
+    try {
+      const res = await fetch("/api/admin/vendedores", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acao: "redefinirSenha", id, novaSenha }),
+      });
+      const d = await res.json();
+      if (!d.ok) {
+        setErro(d.erro || "Não foi possível redefinir a senha.");
+        return;
+      }
+      setOk("Senha redefinida. Anote e passe ao vendedor.");
+      setRedefinindoId("");
+      setNovaSenha("");
+      await carregar();
+    } catch {
+      setErro("Falha de conexão. Tente novamente.");
+    } finally {
+      setSalvandoSenha(false);
+    }
+  }
+
+  async function excluir(id: string, nome: string, totalCondominios: number) {
+    setErro("");
+    setOk("");
+    const confirma = window.confirm(
+      `Excluir o vendedor ${nome}? Os ${totalCondominios} condomínio(s) vinculado(s) a ele ficarão sem vendedor. Essa ação não pode ser desfeita.`,
+    );
+    if (!confirma) return;
+    try {
+      const res = await fetch("/api/admin/vendedores", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acao: "excluir", id }),
+      });
+      const d = await res.json();
+      if (!d.ok) {
+        setErro(d.erro || "Não foi possível excluir.");
+        return;
+      }
+      setOk(`Vendedor ${nome} excluído.`);
       await carregar();
     } catch {
       setErro("Falha de conexão. Tente novamente.");
@@ -164,15 +223,12 @@ export default function AdminVendedores() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             </div>
-            <div className="campo">
-              <label>Senha</label>
-              <input
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={form.senha}
-                onChange={(e) => setForm({ ...form, senha: e.target.value })}
-              />
-            </div>
+            <CampoSenha
+              label="Senha"
+              placeholder="Mínimo 6 caracteres"
+              value={form.senha}
+              onChange={(v) => setForm({ ...form, senha: v })}
+            />
           </div>
           <button className="btn" type="submit" disabled={criando}>
             {criando ? "Criando..." : "Criar vendedor"}
@@ -204,10 +260,47 @@ export default function AdminVendedores() {
                 <button className="btn secundario pequeno" type="button" onClick={() => copiarLink(v.codigo)}>
                   {copiado === v.codigo ? "✓ Link copiado!" : "Copiar link"}
                 </button>
+                <button
+                  className="btn secundario pequeno"
+                  type="button"
+                  onClick={() => {
+                    setRedefinindoId(redefinindoId === v.id ? "" : v.id);
+                    setNovaSenha("");
+                    setErro("");
+                  }}
+                >
+                  Redefinir senha
+                </button>
                 <button className="btn secundario pequeno" type="button" onClick={() => alternarAtivo(v.id)}>
                   {v.ativo ? "Desativar" : "Reativar"}
                 </button>
+                <button className="btn perigo pequeno" type="button" onClick={() => excluir(v.id, v.nome, v.resumo.totalCondominios)}>
+                  Excluir
+                </button>
               </div>
+              {redefinindoId === v.id && (
+                <div style={{ marginTop: 12, borderTop: "1px solid #eef2f7", paddingTop: 12 }}>
+                  <p style={{ color: "#5b6b7d", fontSize: 14, margin: "0 0 8px" }}>
+                    Defina uma nova senha para {v.nome}. Você fica sabendo a senha e passa a ele.
+                  </p>
+                  <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 220 }}>
+                      <CampoSenha
+                        label="Nova senha"
+                        placeholder="Mínimo 6 caracteres"
+                        value={novaSenha}
+                        onChange={setNovaSenha}
+                      />
+                    </div>
+                    <button className="btn pequeno" type="button" disabled={salvandoSenha} onClick={() => redefinirSenha(v.id)}>
+                      {salvandoSenha ? "Salvando..." : "Salvar nova senha"}
+                    </button>
+                    <button className="btn secundario pequeno" type="button" onClick={() => { setRedefinindoId(""); setNovaSenha(""); }}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { LOGO_DATA_URI } from "../../lib/logo";
+import CampoSenha from "../components/CampoSenha";
 
 function brl(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -26,6 +27,10 @@ export default function PainelVendedor() {
   const [form, setForm] = useState({ email: "", senha: "" });
   const [copiado, setCopiado] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [trocandoSenha, setTrocandoSenha] = useState(false);
+  const [msgSenha, setMsgSenha] = useState("");
 
   async function carregar() {
     setCarregando(true);
@@ -85,6 +90,36 @@ export default function PainelVendedor() {
     }
   }
 
+  async function trocarSenha(e: React.FormEvent) {
+    e.preventDefault();
+    setMsgSenha("");
+    setErro("");
+    if (novaSenha.length < 6) {
+      setMsgSenha("A nova senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+    setTrocandoSenha(true);
+    try {
+      const res = await fetch("/api/vendedor/senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senhaAtual, novaSenha }),
+      });
+      const d = await res.json();
+      if (!d.ok) {
+        setMsgSenha(d.erro || "Não foi possível trocar a senha.");
+        return;
+      }
+      setMsgSenha("Senha trocada com sucesso.");
+      setSenhaAtual("");
+      setNovaSenha("");
+    } catch {
+      setMsgSenha("Falha de conexão. Tente novamente.");
+    } finally {
+      setTrocandoSenha(false);
+    }
+  }
+
   async function copiarLink() {
     if (!estado?.vendedor?.codigo) return;
     const link = `${window.location.origin}/cadastro?ref=${estado.vendedor.codigo}`;
@@ -132,15 +167,12 @@ export default function PainelVendedor() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
-          <div className="campo">
-            <label>Senha</label>
-            <input
-              type="password"
-              placeholder="Sua senha"
-              value={form.senha}
-              onChange={(e) => setForm({ ...form, senha: e.target.value })}
-            />
-          </div>
+          <CampoSenha
+            label="Senha"
+            placeholder="Sua senha"
+            value={form.senha}
+            onChange={(v) => setForm({ ...form, senha: v })}
+          />
           <button className="btn" type="submit" disabled={carregando} style={{ width: "100%" }}>
             {carregando ? "Aguarde..." : "Entrar"}
           </button>
@@ -272,6 +304,34 @@ export default function PainelVendedor() {
             </table>
           </div>
         )}
+      </div>
+      <div className="cartao">
+        <div className="cartao-titulo">
+          <h3>🔒 Trocar senha</h3>
+        </div>
+        <p style={{ color: "#5b6b7d", margin: "4px 0 12px" }}>
+          Troque sua senha de acesso ao painel do vendedor quando quiser.
+        </p>
+        {msgSenha && (
+          <div className={msgSenha.includes("sucesso") ? "ok-msg" : "erro"}>{msgSenha}</div>
+        )}
+        <form onSubmit={trocarSenha}>
+          <CampoSenha
+            label="Senha atual"
+            placeholder="Sua senha atual"
+            value={senhaAtual}
+            onChange={setSenhaAtual}
+          />
+          <CampoSenha
+            label="Nova senha"
+            placeholder="Mínimo 6 caracteres"
+            value={novaSenha}
+            onChange={setNovaSenha}
+          />
+          <button className="btn" type="submit" disabled={trocandoSenha}>
+            {trocandoSenha ? "Salvando..." : "Trocar senha"}
+          </button>
+        </form>
       </div>
     </div>
   );

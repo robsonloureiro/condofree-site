@@ -5,10 +5,12 @@ import {
   salvarVendedores,
   criarVendedor,
   calcularComissoes,
+  hashSenha,
   COMISSAO_TAXA,
   COMISSAO_MESES,
 } from "@/lib/vendedores";
 import { listarCondominios, salvarCondominios, carregarDados, salvarDados } from "@/lib/dados";
+import { readJSON, writeJSON } from "@/lib/store";
 
 // Área do dono do CondoFree: gerenciar vendedores e vincular condomínios.
 // Acesso restrito ao e-mail do dono (ADMIN_EMAIL ou o e-mail do Robson).
@@ -91,6 +93,52 @@ export async function PATCH(req: NextRequest) {
     v.ativo = !v.ativo;
     await salvarVendedores(vendedores);
     return Response.json({ ok: true, ativo: v.ativo });
+  }
+
+  if (acao === "redefinirSenha") {
+    const { id, novaSenha } = body as { id: string; novaSenha: string };
+    if (!novaSenha || String(novaSenha).length < 6) {
+      return Response.json({ ok: false, erro: "A nova senha precisa ter pelo menos 6 caracteres." }, { status: 400 });
+    }
+    const vendedores = await listarVendedores();
+    const v = vendedores.find((x) => x.id === id);
+    if (!v) return Response.json({ ok: false, erro: "Vendedor não encontrado." }, { status: 404 });
+    v.senhaHash = hashSenha(String(novaSenha));
+    await salvarVendedores(vendedores);
+    return Response.json({ ok: true });
+  }
+
+  if (acao === "excluir") {
+    const vendedores = await listarVendedores();
+    const v = vendedores.find((x) => x.id === body.id);
+    if (!v) return Response.json({ ok: false, erro: "Vendedor não encontrado." }, { status: 404 });
+    await salvarVendedores(vendedores.filter((x) => x.id !== body.id));
+    // Encerra as sessões do vendedor excluído.
+    const sessoes = await readJSON<any[]>("db/sessoes-vendedores.json", []);
+    await writeJSON(
+      "db/sessoes-vendedores.json",
+      sessoes.filter((s) => s.vendedorId !== body.id),
+    );
+    // Desvincula os condomínios dele (ficam sem vendedor).
+    const condominios = await listarCondominios();
+    const desvinculados: string[] = [];
+    for (const c of condominios) {
+      if (c.vendedorId === body.id) {
+        c.vendedorId = null;
+        desvinculados.push(c.id);
+      }
+    }
+    if (desvinculados.length > 0) {
+      await salvarCondominios(condominios);
+      for (const id of desvinculados) {
+        const dados = await carregarDados(id);
+        if (dados && dados.condominio.vendedorId === body.id) {
+          dados.condominio.vendedorId = null;
+          await salvarDados(dados);
+        }
+      }
+    }
+    return Response.json({ ok: true });
   }
 
   if (acao === "vincular") {
