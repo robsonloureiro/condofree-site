@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import { readJSON, writeJSON, hojeISO } from "./store";
 import { hashSenha, verificaSenha } from "./auth";
-import type { Vendedor, SessaoVendedor, Condominio } from "./types";
+import type { Vendedor, SessaoVendedor, Condominio, LeadVendedor, AvisoVendedor } from "./types";
 
 export { hashSenha, verificaSenha };
 
@@ -225,4 +225,161 @@ export function calcularComissoes(condominios: Condominio[]): ResumoComissoes {
     totalGeral: Math.round((totalGanho + totalAReceber) * 100) / 100,
     parcelasAReceber,
   };
+}
+
+// ---------- Extrato mês a mês ----------
+
+export interface LinhaExtrato {
+  mes: number; // 1..24 a partir do início da assinatura
+  mesRotulo: string; // "ago/26"
+  condominioId: string;
+  condominioNome: string;
+  valor: number; // comissão do mês
+  status: "ganho" | "a_receber" | "pendente"; // ganho = mês decorrido e ativo; a_receber = futuro e ativo; pendente = trial (ainda sem pagamento)
+}
+
+function rotuloMes(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const meses = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  return `${meses[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+}
+
+function somarMeses(iso: string, n: number): string {
+  const d = new Date(iso);
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString();
+}
+
+export function gerarExtrato(condominios: Condominio[]): LinhaExtrato[] {
+  const agora = new Date();
+  const linhas: (LinhaExtrato & { dataISO: string })[] = [];
+  for (const c of condominios) {
+    const inicio = c.assinaturaInicio || c.criadoEm;
+    const decorridos = c.assinaturaStatus === "trial" ? 0 : mesesDecorridos(inicio, agora);
+    for (let m = 1; m <= COMISSAO_MESES; m++) {
+      const status: LinhaExtrato["status"] =
+        c.assinaturaStatus === "trial"
+          ? "pendente"
+          : m <= decorridos
+            ? "ganho"
+            : "a_receber";
+      const valor =
+        c.assinaturaStatus === "trial"
+          ? valorMensalidadeProjetado(m) * COMISSAO_TAXA
+          : m <= decorridos
+            ? valorMensalidadeNoMes(c, m) * COMISSAO_TAXA
+            : valorMensalidadeProjetado(m) * COMISSAO_TAXA;
+      const dataISO = somarMeses(inicio, m - 1);
+      linhas.push({
+        mes: m,
+        mesRotulo: rotuloMes(dataISO),
+        condominioId: c.id,
+        condominioNome: c.nome,
+        valor: Math.round(valor * 100) / 100,
+        status,
+        dataISO,
+      });
+    }
+  }
+  // Mais recentes primeiro (pela data do mês, não pelo rótulo).
+  linhas.sort((a, b) => b.dataISO.localeCompare(a.dataISO) || a.condominioNome.localeCompare(b.condominioNome));
+  return linhas.map(({ dataISO: _, ...resto }) => resto);
+}
+
+// ---------- Funil de prospecção (leads) ----------
+
+const ARQUIVO_LEADS = "db/leads-vendedores.json";
+export const STATUS_LEAD: { id: "novo" | "contatado" | "interessado" | "fechado" | "perdido"; rotulo: string }[] = [
+  { id: "novo", rotulo: "A abordar" },
+  { id: "contatado", rotulo: "Contatado" },
+  { id: "interessado", rotulo: "Interessado" },
+  { id: "fechado", rotulo: "Fechado" },
+  { id: "perdido", rotulo: "Perdido" },
+];
+
+export async function listarLeads(vendedorId?: string): Promise<LeadVendedor[]> {
+  const todos = await readJSON<LeadVendedor[]>(ARQUIVO_LEADS, []);
+  const lista = vendedorId ? todos.filter((l) => l.vendedorId === vendedorId) : todos;
+  lista.sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm));
+  return lista;
+}
+
+export async function salvarLeads(lista: LeadVendedor[]): Promise<void> {
+  await writeJSON(ARQUIVO_LEADS, lista);
+}
+
+export async function criarLead(
+  vendedorId: string,
+  dados: { nomeCondominio: string; contato?: string; telefone?: string; cidade?: string; observacao?: string },
+): Promise<LeadVendedor> {
+  const todos = await readJSON<LeadVendedor[]>(ARQUIVO_LEADS, []);
+  const agora = hojeISO();
+  const lead: LeadVendedor = {
+    id: `lead_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+    vendedorId,
+    nomeCondominio: dados.nomeCondominio.trim(),
+    contato: dados.contato?.trim() || null,
+    telefone: dados.telefone?.trim() || null,
+    cidade: dados.cidade?.trim() || null,
+    status: "novo",
+    observacao: dados.observacao?.trim() || null,
+    criadoEm: agora,
+    atualizadoEm: agora,
+  };
+  todos.push(lead);
+  await writeJSON(ARQUIVO_LEADS, todos);
+  return lead;
+}
+
+// ---------- Avisos do vendedor ----------
+
+const ARQUIVO_AVISOS = "db/avisos-vendedores.json";
+
+export async function listarAvisos(vendedorId: string): Promise<AvisoVendedor[]> {
+  const todos = await readJSON<AvisoVendedor[]>(ARQUIVO_AVISOS, []);
+  const lista = todos.filter((a) => a.vendedorId === vendedorId);
+  lista.sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
+  return lista;
+}
+
+export async function criarAviso(
+  vendedorId: string,
+  tipo: "novo_condominio" | "assinatura_ativa",
+  titulo: string,
+  detalhe?: string,
+): Promise<void> {
+  const todos = await readJSON<AvisoVendedor[]>(ARQUIVO_AVISOS, []);
+  todos.push({
+    id: `av_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+    vendedorId,
+    tipo,
+    titulo,
+    detalhe: detalhe || null,
+    lido: false,
+    criadoEm: hojeISO(),
+  });
+  // Mantém só os 100 mais recentes por vendedor.
+  const porVendedor = todos.filter((a) => a.vendedorId === vendedorId);
+  if (porVendedor.length > 100) {
+    const manter = new Set(porVendedor.slice(-100).map((a) => a.id));
+    await writeJSON(
+      ARQUIVO_AVISOS,
+      todos.filter((a) => a.vendedorId !== vendedorId || manter.has(a.id)),
+    );
+    return;
+  }
+  await writeJSON(ARQUIVO_AVISOS, todos);
+}
+
+export async function marcarAvisosLidos(vendedorId: string): Promise<void> {
+  const todos = await readJSON<AvisoVendedor[]>(ARQUIVO_AVISOS, []);
+  let mudou = false;
+  for (const a of todos) {
+    if (a.vendedorId === vendedorId && !a.lido) {
+      a.lido = true;
+      mudou = true;
+    }
+  }
+  if (mudou) await writeJSON(ARQUIVO_AVISOS, todos);
 }

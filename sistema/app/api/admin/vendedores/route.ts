@@ -5,6 +5,7 @@ import {
   salvarVendedores,
   criarVendedor,
   calcularComissoes,
+  listarLeads,
   hashSenha,
   COMISSAO_TAXA,
   COMISSAO_MESES,
@@ -28,17 +29,18 @@ async function exigirDono() {
   return { ok: true as const, usuario };
 }
 
-// GET: lista vendedores (com resumo de comissões) + condomínios (com vendedor atual).
+// GET: lista vendedores (com resumo de comissões + leads do funil) + condomínios (com vendedor atual).
 export async function GET() {
   const auth = await exigirDono();
   if (!auth.ok) return auth.resposta;
   const vendedores = await listarVendedores();
   const condominios = await listarCondominios();
+  const todosLeads = await listarLeads();
   const lista = vendedores.map((v) => {
     const meus = condominios.filter((c) => c.vendedorId === v.id);
     const resumo = calcularComissoes(meus);
     const { senhaHash: _, ...publico } = v;
-    return { ...publico, resumo };
+    return { ...publico, resumo, leads: todosLeads.filter((l) => l.vendedorId === v.id) };
   });
   const condos = condominios.map((c) => ({
     id: c.id,

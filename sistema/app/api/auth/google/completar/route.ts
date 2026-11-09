@@ -9,7 +9,7 @@ import {
 } from "@/lib/auth";
 import { buscarPendente, removerPendente } from "@/lib/google-pendente";
 import { listarCondominios, salvarCondominios, carregarDados, salvarDados } from "@/lib/dados";
-import { buscarVendedorPorCodigo } from "@/lib/vendedores";
+import { buscarVendedorPorCodigo, criarAviso } from "@/lib/vendedores";
 import { enviarBoasVindasSindico, enviarBoasVindasMorador } from "@/lib/email";
 import type { DadosCondominio, Usuario } from "@/lib/types";
 
@@ -97,6 +97,12 @@ export async function POST(req: NextRequest) {
     condominios.push(condominio);
     await salvarCondominios(condominios);
     await salvarDados(dados);
+    // Avisa o vendedor que um condomínio se cadastrou pelo link dele (não trava se falhar).
+    if (vendedor) {
+      try {
+        await criarAviso(vendedor.id, "novo_condominio", `Novo condomínio indicado: ${condominio.nome}`, "Cadastro pelo seu link de indicação. A comissão começa quando a assinatura ativar.");
+      } catch {}
+    }
     await removerPendente(String(token));
     const tokenSessao = await criarSessao(usuario.id);
     definirCookieSessao(tokenSessao);

@@ -38,12 +38,40 @@ export interface Vendedor {
   codigo: string; // código de indicação único (6 chars) — link de cadastro
   criadoEm: string;
   ativo: boolean;
+  pixChave?: string | null; // chave Pix para receber as comissões
 }
 
 export interface SessaoVendedor {
   token: string;
   vendedorId: string;
   expiraEm: string;
+}
+
+// Lead do funil de prospecção do vendedor (condomínio que ele está abordando).
+export type StatusLead = "novo" | "contatado" | "interessado" | "fechado" | "perdido";
+
+export interface LeadVendedor {
+  id: string;
+  vendedorId: string;
+  nomeCondominio: string;
+  contato?: string | null; // nome do síndico / contato
+  telefone?: string | null;
+  cidade?: string | null;
+  status: StatusLead;
+  observacao?: string | null;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+// Aviso no painel do vendedor (ex.: novo condomínio indicado, assinatura ativa).
+export interface AvisoVendedor {
+  id: string;
+  vendedorId: string;
+  tipo: "novo_condominio" | "assinatura_ativa";
+  titulo: string;
+  detalhe?: string | null;
+  lido: boolean;
+  criadoEm: string;
 }
 
 export interface Morador {

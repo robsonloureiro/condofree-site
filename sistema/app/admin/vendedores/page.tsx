@@ -278,6 +278,33 @@ export default function AdminVendedores() {
                   Excluir
                 </button>
               </div>
+              <div style={{ marginTop: 10, borderTop: "1px solid #eef2f7", paddingTop: 10 }}>
+                <div style={{ fontSize: 14, color: "#5b6b7d" }}>
+                  💳 Chave Pix para pagamento:{" "}
+                  {v.pixChave ? <strong style={{ color: "#0b2a4a" }}>{v.pixChave}</strong> : <span>ainda não cadastrada</span>}
+                </div>
+              </div>
+              <div style={{ marginTop: 10, borderTop: "1px solid #eef2f7", paddingTop: 10 }}>
+                <div style={{ fontWeight: 700, color: "#0b2a4a", marginBottom: 6 }}>
+                  🎯 Funil de prospecção ({(v.leads || []).length})
+                </div>
+                {!(v.leads || []).length ? (
+                  <div style={{ fontSize: 14, color: "#5b6b7d" }}>Nenhum lead registrado.</div>
+                ) : (
+                  (v.leads || []).map((l: any) => (
+                    <div key={l.id} style={{ fontSize: 14, color: "#334155", padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <strong>{l.nomeCondominio}</strong>
+                      {l.contato ? ` · ${l.contato}` : ""}
+                      {l.telefone ? ` · ${l.telefone}` : ""}
+                      {l.cidade ? ` · ${l.cidade}` : ""} —{" "}
+                      <span className={`etiqueta ${l.status === "fechado" ? "verde" : l.status === "interessado" ? "amber" : l.status === "contatado" ? "azul" : l.status === "perdido" ? "vermelha" : "cinza"}`}>
+                        {l.status === "novo" ? "A abordar" : l.status === "contatado" ? "Contatado" : l.status === "interessado" ? "Interessado" : l.status === "fechado" ? "Fechado" : "Perdido"}
+                      </span>
+                      {l.observacao ? <span style={{ color: "#5b6b7d" }}> · {l.observacao}</span> : ""}
+                    </div>
+                  ))
+                )}
+              </div>
               {redefinindoId === v.id && (
                 <div style={{ marginTop: 12, borderTop: "1px solid #eef2f7", paddingTop: 12 }}>
                   <p style={{ color: "#5b6b7d", fontSize: 14, margin: "0 0 8px" }}>

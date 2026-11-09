@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { listarUsuarios } from "@/lib/auth";
 import { carregarDados, salvarDados, listarCondominios, salvarCondominios } from "@/lib/dados";
+import { criarAviso } from "@/lib/vendedores";
 
 /**
  * Webhook do Mercado Pago (notificações de assinatura).
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
   dados.condominio.assinaturaPlanoId = String(pre.preapproval_plan_id || "");
   // Início da assinatura (primeiro pagamento): base da janela de 24 meses
   // da comissão do vendedor. Só marca uma vez.
+  const primeiraAtivacao = !dados.condominio.assinaturaInicio;
   if (!dados.condominio.assinaturaInicio) {
     dados.condominio.assinaturaInicio = new Date().toISOString();
   }
@@ -50,6 +52,12 @@ export async function POST(req: NextRequest) {
     c.assinaturaPreapprovalId = String(id);
     if (!c.assinaturaInicio) c.assinaturaInicio = dados.condominio.assinaturaInicio;
     await salvarCondominios(condominios);
+  }
+  // Avisa o vendedor que a assinatura ativou (a comissão começou) — só na primeira vez.
+  if (primeiraAtivacao && dados.condominio.vendedorId) {
+    try {
+      await criarAviso(dados.condominio.vendedorId, "assinatura_ativa", `Assinatura ativa: ${dados.condominio.nome}`, "A comissão de 50% começou a contar.");
+    } catch {}
   }
   return Response.json({ ok: true, ativado: true });
 }
