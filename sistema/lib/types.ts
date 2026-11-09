@@ -20,9 +20,30 @@ export interface Condominio {
   assinaturaStatus: "trial" | "ativa" | "vencida" | "cancelada";
   assinaturaPlanoId?: string | null;
   assinaturaPreapprovalId?: string | null;
+  assinaturaInicio?: string | null; // ISO date da primeira ativação (primeiro pagamento)
+  vendedorId?: string | null; // vendedor que fechou este condomínio
   mpConfig?: { accessToken?: string } | null;
   pixChave?: string | null; // Pix do condomínio para receber as cobranças
   cobrancaRecorrente?: { dia: number; valor: number; descricao: string } | null;
+}
+
+// Vendedor (área do vendedor): conta criada pelo dono do CondoFree.
+// O vendedor NÃO pertence a um condomínio; ele fecha assinaturas e
+// ganha 50% das mensalidades pagas nos primeiros 24 meses.
+export interface Vendedor {
+  id: string;
+  nome: string;
+  email: string;
+  senhaHash: string;
+  codigo: string; // código de indicação único (6 chars) — link de cadastro
+  criadoEm: string;
+  ativo: boolean;
+}
+
+export interface SessaoVendedor {
+  token: string;
+  vendedorId: string;
+  expiraEm: string;
 }
 
 export interface Morador {

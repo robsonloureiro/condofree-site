@@ -37,12 +37,18 @@ export async function POST(req: NextRequest) {
   dados.condominio.assinaturaStatus = "ativa";
   dados.condominio.assinaturaPreapprovalId = String(id);
   dados.condominio.assinaturaPlanoId = String(pre.preapproval_plan_id || "");
+  // Início da assinatura (primeiro pagamento): base da janela de 24 meses
+  // da comissão do vendedor. Só marca uma vez.
+  if (!dados.condominio.assinaturaInicio) {
+    dados.condominio.assinaturaInicio = new Date().toISOString();
+  }
   await salvarDados(dados);
   const condominios = await listarCondominios();
   const c = condominios.find((x) => x.id === dados.condominio.id);
   if (c) {
     c.assinaturaStatus = "ativa";
     c.assinaturaPreapprovalId = String(id);
+    if (!c.assinaturaInicio) c.assinaturaInicio = dados.condominio.assinaturaInicio;
     await salvarCondominios(condominios);
   }
   return Response.json({ ok: true, ativado: true });

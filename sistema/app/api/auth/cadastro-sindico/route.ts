@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { listarUsuarios, salvarUsuarios, hashSenha, criarSessao, definirCookieSessao, novoId, hojeISO } from "@/lib/auth";
 import { listarCondominios, salvarCondominios, salvarDados } from "@/lib/dados";
+import { buscarVendedorPorCodigo } from "@/lib/vendedores";
 import { enviarBoasVindasSindico } from "@/lib/email";
 import type { DadosCondominio, Usuario } from "@/lib/types";
 
@@ -12,7 +13,7 @@ function codigoConvite(): string {
 }
 
 export async function POST(req: NextRequest) {
-  const { nomeCondominio, unidades, nome, email, senha } = await req.json();
+  const { nomeCondominio, unidades, nome, email, senha, ref } = await req.json();
   if (!nomeCondominio || !unidades || !nome || !email || !senha) {
     return Response.json({ ok: false, erro: "Preencha todos os campos." }, { status: 400 });
   }
@@ -23,6 +24,8 @@ export async function POST(req: NextRequest) {
   if (usuarios.some((u) => u.email.toLowerCase() === String(email).toLowerCase())) {
     return Response.json({ ok: false, erro: "Já existe uma conta com esse e-mail." }, { status: 400 });
   }
+  // Código de indicação do vendedor (opcional): vincula o condomínio a quem fechou.
+  const vendedor = ref ? await buscarVendedorPorCodigo(String(ref)) : null;
   const condominioId = novoId("cond");
   const agora = hojeISO();
   const trialFim = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -34,6 +37,7 @@ export async function POST(req: NextRequest) {
     criadoEm: agora,
     trialFim,
     assinaturaStatus: "trial" as const,
+    vendedorId: vendedor ? vendedor.id : null,
   };
   const usuario: Usuario = {
     id: novoId("usr"),

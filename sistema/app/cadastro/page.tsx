@@ -22,6 +22,8 @@ export default function Cadastro() {
     bloco: "",
     apartamento: "",
   });
+  const [refCodigo, setRefCodigo] = useState("");
+  const [refNome, setRefNome] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -37,6 +39,17 @@ export default function Cadastro() {
       unidades: params.get("unidades") || f.unidades,
       codigoConvite: params.get("codigo") || f.codigoConvite,
     }));
+    // Código de indicação do vendedor (link de cadastro do vendedor).
+    const refParam = params.get("ref") || "";
+    if (refParam) {
+      setRefCodigo(refParam);
+      fetch(`/api/vendedor/info?codigo=${encodeURIComponent(refParam)}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.ok && d.nome) setRefNome(d.nome);
+        })
+        .catch(() => undefined);
+    }
   }, []);
 
   function campo(nome: string) {
@@ -60,6 +73,7 @@ export default function Cadastro() {
         nome: form.nome,
         email: form.email,
         senha: form.senha,
+        ref: refCodigo || undefined,
       };
       if (aba === "morador") {
         url = "/api/auth/cadastro-morador";
@@ -103,6 +117,12 @@ export default function Cadastro() {
           Sua conta já nasce ativa e você recebe um e-mail de boas-vindas da CondoFree. Depois é só entrar com o mesmo e-mail e senha.
         </p>
       </div>
+
+      {refCodigo && (
+        <p style={{ color: "#0b2a4a", background: "#e8f5ee", border: "1px solid #bfe3cd", borderRadius: 10, padding: "10px 14px", margin: "12px 0 0", textAlign: "center" }}>
+          {refNome ? `Você foi indicado por ${refNome}.` : "Você chegou por um link de indicação."} Seu cadastro será vinculado a quem te apresentou o CondoFree.
+        </p>
+      )}
 
       <div className="abas-login">
         <button className={aba === "sindico" ? "ativo" : ""} onClick={() => setAba("sindico")}>Sou síndico</button>

@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth";
 import { buscarPendente, removerPendente } from "@/lib/google-pendente";
 import { listarCondominios, salvarCondominios, carregarDados, salvarDados } from "@/lib/dados";
+import { buscarVendedorPorCodigo } from "@/lib/vendedores";
 import { enviarBoasVindasSindico, enviarBoasVindasMorador } from "@/lib/email";
 import type { DadosCondominio, Usuario } from "@/lib/types";
 
@@ -25,7 +26,7 @@ function codigoConvite(): string {
 // criou após verificar o e-mail — nunca do corpo da requisição.
 export async function POST(req: NextRequest) {
   const corpo = await req.json();
-  const { token, papel, nome, nomeCondominio, unidades, codigoConvite: codigo, bloco, apartamento } = corpo;
+  const { token, papel, nome, nomeCondominio, unidades, codigoConvite: codigo, bloco, apartamento, ref } = corpo;
   const pendente = await buscarPendente(String(token || ""));
   if (!pendente) {
     return Response.json(
@@ -51,6 +52,8 @@ export async function POST(req: NextRequest) {
     }
     const condominioId = novoId("cond");
     const trialFim = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    // Código de indicação do vendedor (opcional): vincula o condomínio a quem fechou.
+    const vendedor = ref ? await buscarVendedorPorCodigo(String(ref)) : null;
     const condominio = {
       id: condominioId,
       nome: String(nomeCondominio),
@@ -59,6 +62,7 @@ export async function POST(req: NextRequest) {
       criadoEm: agora,
       trialFim,
       assinaturaStatus: "trial" as const,
+      vendedorId: vendedor ? vendedor.id : null,
     };
     const usuario: Usuario = {
       id: novoId("usr"),
