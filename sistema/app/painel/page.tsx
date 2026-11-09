@@ -208,11 +208,6 @@ export default function Painel() {
             <span>{m.icone}</span> {m.rotulo}
           </button>
         ))}
-        {usuario.email.toLowerCase() === "rob.animacoes@gmail.com" && (
-          <button className="item" onClick={() => router.push("/admin/vendedores")}>
-            <span>💼</span> Vendedores
-          </button>
-        )}
         <button className="item" onClick={sair}>
           <span>🚪</span> Sair
         </button>
@@ -236,9 +231,6 @@ export default function Painel() {
           <div className="side-rodape">
             <span className="selo">{estado.statusAssinatura.texto}</span>
             <button className="btn pequeno" onClick={() => irPara("ajuda")}>Ajuda / Suporte</button>
-            {usuario.email.toLowerCase() === "rob.animacoes@gmail.com" && (
-              <button className="btn pequeno" onClick={() => router.push("/admin/vendedores")}>💼 Vendedores</button>
-            )}
             <button className="btn secundario pequeno" onClick={sair}>Sair</button>
           </div>
         </aside>
