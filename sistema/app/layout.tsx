@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import PwaRegistro from "./pwa";
+import RegistrarVisita from "./components/RegistrarVisita";
 
 export const metadata: Metadata = {
   title: "CondoFree — Gestão de condomínios",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <PwaRegistro />
+        <RegistrarVisita />
         {children}
       </body>
     </html>

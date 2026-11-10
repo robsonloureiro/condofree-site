@@ -227,3 +227,16 @@ export interface Sessao {
   usuarioId: string;
   expiraEm: string;
 }
+
+// Visita ao site/sistema (controle do dono). Uma visita = uma pessoa por
+// dia. Sem IP nem dado pessoal: só papel, data e chave anônima de dedupe.
+export type PapelVisita = "sindico" | "morador" | "vendedor" | "visitante";
+
+export interface Visita {
+  id: string;
+  data: string; // YYYY-MM-DD (fuso America/Sao_Paulo)
+  papel: PapelVisita;
+  chave: string; // "u:<usuarioId>" | "v:<vendedorId>" | "a:<anonId>"
+  pagina?: string | null;
+  criadoEm: string;
+}

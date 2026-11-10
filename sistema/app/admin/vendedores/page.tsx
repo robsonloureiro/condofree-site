@@ -192,7 +192,10 @@ export default function AdminVendedores() {
           <h2>Vendedores</h2>
           <p>Área do dono do CondoFree — crie logins de vendedor e vincule condomínios a quem fechou.</p>
         </div>
-        <button className="btn secundario pequeno" type="button" onClick={() => router.push("/painel")} style={{ marginLeft: "auto" }}>
+        <button className="btn secundario pequeno" type="button" onClick={() => router.push("/admin/visitas")} style={{ marginLeft: "auto" }}>
+          📊 Visitas
+        </button>
+        <button className="btn secundario pequeno" type="button" onClick={() => router.push("/painel")}>
           Voltar ao painel
         </button>
       </div>

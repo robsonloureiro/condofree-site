@@ -907,5 +907,19 @@ body.chat-open .wa-float{opacity:0;pointer-events:none;visibility:hidden}
   <button id="bannerInstalarBtn" style="background:#22a06b;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;white-space:nowrap;">Instalar</button>
   <button id="bannerInstalarFechar" aria-label="Fechar" style="background:none;border:0;color:#fff;font-size:20px;cursor:pointer;padding:4px;">×</button>
 </div>
+<script>
+/* Controle de visitas (visitante): registra 1 visita por dia por navegador.
+   Não guarda IP nem dado pessoal — só conta o acesso. */
+(function(){
+  try{
+    var hoje=new Date().toISOString().slice(0,10);
+    if(localStorage.getItem('condofree-visita-dia')===hoje) return;
+    var anon=localStorage.getItem('condofree-visitante-id');
+    if(!anon){ anon='an-'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); localStorage.setItem('condofree-visitante-id',anon); }
+    localStorage.setItem('condofree-visita-dia',hoje);
+    fetch('https://app.condofree.com.br/api/visitas/registrar',{method:'POST',mode:'cors',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({anonId:anon,pagina:'landing'})}).catch(function(){});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
