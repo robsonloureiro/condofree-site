@@ -61,7 +61,7 @@ export default function AdminVisitas() {
         <span className="chip-icone" style={{ background: "#dbeafe" }}>📊</span>
         <div>
           <h2>Visitas</h2>
-          <p>Quantas pessoas visitam o site e o sistema, por papel. Uma visita = uma pessoa por dia.</p>
+          <p>Quantos IPs distintos acessam o site e o sistema, por papel. Um IP que acessa várias vezes conta uma vez só.</p>
         </div>
         <button className="btn secundario pequeno" type="button" onClick={() => router.push("/admin/vendedores")} style={{ marginLeft: "auto" }}>
           Vendedores
@@ -72,7 +72,7 @@ export default function AdminVisitas() {
 
       <div className="cartao" style={{ marginBottom: 16 }}>
         <div className="cartao-titulo">
-          <h3>📈 Resumo — {geral.total} visitas no total</h3>
+          <h3>📈 Resumo — {geral.total} IPs no total</h3>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
           {ROTULOS.map((p) => {
@@ -100,7 +100,7 @@ export default function AdminVisitas() {
           </div>
         </div>
         <p style={{ color: "#5b6b7d", fontSize: 13, margin: "12px 0 0" }}>
-          Visitante é quem acessa sem login (principalmente a página de vendas). Síndico, morador e vendedor são quem entra logado no sistema. Não guardamos IP nem dado pessoal de ninguém.
+          Visitante é quem acessa sem login (principalmente a página de vendas). Síndico, morador e vendedor são quem entra logado no sistema. O endereço IP em si não é guardado — só um código dele, para contar IPs distintos sem armazenar o número. Se você acessar 2 vezes no mesmo dia pela mesma internet, conta 1 IP.
         </p>
       </div>
 

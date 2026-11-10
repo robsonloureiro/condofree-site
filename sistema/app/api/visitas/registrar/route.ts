@@ -5,15 +5,29 @@ import { vendedorDaSessao } from "@/lib/vendedores";
 import { registrarVisita } from "@/lib/visitas";
 import type { PapelVisita } from "@/lib/types";
 
-// Registra uma visita (uma pessoa por dia). O papel vem da sessão:
-// síndico/morador (cookie condofree-token), vendedor (cookie
-// condofree-vendedor-token) ou visitante (sem sessão). Sem IP, sem dado
-// pessoal — só papel, data e chave anônima de dedupe.
+// Registra um acesso. A contagem é por IP DISTINTO: quantos IPs
+// diferentes acessaram, não quantas vezes cada um acessou. O IP em si
+// não é guardado — só um hash dele, suficiente para contar IPs distintos.
+// O papel vem da sessão: síndico/morador (cookie condofree-token),
+// vendedor (cookie condofree-vendedor-token) ou visitante (sem sessão).
 const ORIGENS_PERMITIDAS = [
   "https://condofree.com.br",
   "https://www.condofree.com.br",
   "https://app.condofree.com.br",
 ];
+
+// IP do cliente: na Vercel vem no x-forwarded-for (primeiro da lista).
+function ipDoCliente(req: NextRequest): string {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0].trim();
+  const real = req.headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "desconhecido";
+}
+
+function hashIP(ip: string): string {
+  return crypto.createHash("sha256").update(ip).digest("hex").slice(0, 32);
+}
 
 function corsHeaders(req: NextRequest): Record<string, string> {
   const origem = req.headers.get("origin") || "";
@@ -66,7 +80,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const registrado = await registrarVisita(papel, chave, pagina);
+  const registrado = await registrarVisita(papel, chave, hashIP(ipDoCliente(req)), pagina);
   return Response.json(
     { ok: true, registrado, papel, anonId: papel === "visitante" ? anonId : null },
     { headers },

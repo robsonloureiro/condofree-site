@@ -228,8 +228,10 @@ export interface Sessao {
   expiraEm: string;
 }
 
-// Visita ao site/sistema (controle do dono). Uma visita = uma pessoa por
-// dia. Sem IP nem dado pessoal: só papel, data e chave anônima de dedupe.
+// Visita ao site/sistema (controle do dono). A contagem é por IP distinto:
+// quantos IPs diferentes acessaram, não quantas vezes cada um acessou.
+// O IP não é guardado — só um hash dele, para contar IPs distintos sem
+// armazenar o endereço. Sem dado pessoal.
 export type PapelVisita = "sindico" | "morador" | "vendedor" | "visitante";
 
 export interface Visita {
@@ -237,6 +239,7 @@ export interface Visita {
   data: string; // YYYY-MM-DD (fuso America/Sao_Paulo)
   papel: PapelVisita;
   chave: string; // "u:<usuarioId>" | "v:<vendedorId>" | "a:<anonId>"
+  ipHash?: string | null; // hash do IP (contagem de IPs distintos); registros antigos podem não ter
   pagina?: string | null;
   criadoEm: string;
 }
