@@ -16,12 +16,13 @@ const ORIGENS_PERMITIDAS = [
   "https://app.condofree.com.br",
 ];
 
-// IP do cliente: na Vercel vem no x-forwarded-for (primeiro da lista).
+// IP do cliente: na Vercel o x-real-ip é o IP real visto pela borda
+// (não pode ser forjado pelo visitante). Sem ele, usa o x-forwarded-for.
 function ipDoCliente(req: NextRequest): string {
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
   const real = req.headers.get("x-real-ip");
   if (real) return real.trim();
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0].trim();
   return "desconhecido";
 }
 
