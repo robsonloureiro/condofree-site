@@ -227,7 +227,7 @@ export default function Login() {
             Criar conta grátis
           </button>
           <p className="login-hero-preco">
-            14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês.
+            14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 3 primeiros meses e R$ 97/mês.
           </p>
 
         </div>

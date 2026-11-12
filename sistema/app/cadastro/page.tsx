@@ -217,7 +217,7 @@ export default function Cadastro() {
         </button>
         {aba === "sindico" && (
           <p style={{ color: "#5b6b7d", fontSize: 14, marginTop: 12 }}>
-            14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.
+            14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 3 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.
           </p>
         )}
       </form>

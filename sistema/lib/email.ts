@@ -46,11 +46,11 @@ export async function enviarBoasVindasSindico(d: {
   trialFim: string;
 }): Promise<boolean> {
   const trial = new Date(d.trialFim).toLocaleDateString("pt-BR");
-  const texto = `Olá, ${d.nome}!\n\nSua conta no CondoFree está ativa. Seu condomínio: ${d.condominio}.\n\nCódigo de convite do seu condomínio: ${d.codigoConvite}\nPasse esse código aos moradores para eles criarem a conta deles.\n\nSeu teste grátis vai até ${trial}. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.\n\nAcesse o sistema: ${APP_URL}\n\nDúvidas? Fale com a gente no WhatsApp ${SUPORTE_WHATSAPP}.\n\nCondoFree — Mais controle, zero burocracia.`;
+  const texto = `Olá, ${d.nome}!\n\nSua conta no CondoFree está ativa. Seu condomínio: ${d.condominio}.\n\nCódigo de convite do seu condomínio: ${d.codigoConvite}\nPasse esse código aos moradores para eles criarem a conta deles.\n\nSeu teste grátis vai até ${trial}. Depois, R$ 9,90/mês nos 3 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.\n\nAcesse o sistema: ${APP_URL}\n\nDúvidas? Fale com a gente no WhatsApp ${SUPORTE_WHATSAPP}.\n\nCondoFree — Mais controle, zero burocracia.`;
   const html = baseHtml(`<p>Olá, <strong>${d.nome}</strong>!</p>
 <p>Sua conta no CondoFree está ativa. Seu condomínio: <strong>${d.condominio}</strong>.</p>
 <p><strong>Código de convite do seu condomínio: ${d.codigoConvite}</strong><br>Passe esse código aos moradores para eles criarem a conta deles.</p>
-<p>Seu teste grátis vai até <strong>${trial}</strong>. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.</p>
+<p>Seu teste grátis vai até <strong>${trial}</strong>. Depois, R$ 9,90/mês nos 3 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.</p>
 <p><a href="${APP_URL}" style="display:inline-block;background:#46d17c;color:#0b2a4a;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none;">Acessar o sistema</a></p>`);
   return enviar(d.to, "Bem-vindo ao CondoFree — sua conta está ativa", texto, html);
 }

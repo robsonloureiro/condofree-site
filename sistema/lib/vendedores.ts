@@ -8,10 +8,10 @@ export { hashSenha, verificaSenha };
 
 // ---------- Constantes da comissão ----------
 // O vendedor ganha 50% de cada mensalidade PAGA nos primeiros 24 meses.
-// Promo: R$ 9,90/mês nos 6 primeiros meses; depois R$ 97/mês.
+// Promo: R$ 9,90/mês nos 3 primeiros meses; depois R$ 97/mês.
 export const COMISSAO_TAXA = 0.5;
 export const COMISSAO_MESES = 24;
-export const COMISSAO_MESES_PROMO = 6;
+export const COMISSAO_MESES_PROMO = 3;
 export const PLANO_PROMOCIONAL_ID = "b6d59f07efcd4142b013b9d2f7519261";
 export const PLANO_MENSAL_ID = "c70e5c528b6f4bad8b11a517cdeca831";
 export const PRECO_PROMOCIONAL = 9.9;
@@ -130,8 +130,8 @@ export function valorMensalidadeNoMes(condominio: Condominio, mes: number): numb
 }
 
 // Valor da mensalidade no mês m para a PROJEÇÃO (meses futuros e total
-// cheio): o caminho padrão é promo nos 6 primeiros meses e R$ 97 depois.
-// É o que dá R$ 902,70 de comissão por condomínio nos 24 meses.
+// cheio): o caminho padrão é promo nos 3 primeiros meses e R$ 97 depois.
+// É o que dá R$ 1.033,35 de comissão por condomínio nos 24 meses.
 export function valorMensalidadeProjetado(mes: number): number {
   if (mes <= COMISSAO_MESES_PROMO) return PRECO_PROMOCIONAL;
   return PRECO_MENSAL;

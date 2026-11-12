@@ -1554,7 +1554,7 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
   const condominio = estado.condominio;
   const [novoNome, setNovoNome] = useState("");
   const [copiado, setCopiado] = useState(false);
-  // Plano promocional do Mercado Pago (R$ 9,90/mês nos 6 primeiros meses).
+  // Plano promocional do Mercado Pago (R$ 9,90/mês nos 3 primeiros meses).
   // O botão de R$ 97/mês só aparece depois que o condomínio já usou a promoção.
   const PLANO_PROMOCIONAL_ID = "b6d59f07efcd4142b013b9d2f7519261";
   const jaUsouPromo = condominio.assinaturaPlanoId === PLANO_PROMOCIONAL_ID;
@@ -1623,13 +1623,13 @@ function PlanoTab({ estado, ehSindico, acao, setOk, setErro }: { estado: any; eh
       <div className="cartao">
         <div className="cartao-titulo"><span className="chip-icone chip-amarela pequeno">⭐</span><h2 style={{ margin: 0, fontSize: 20, color: "var(--navy)" }}>Plano e FAQ</h2></div>
         <p><strong>Status:</strong> {estado.statusAssinatura.texto}</p>
-        <p><strong>Preço:</strong> R$ 9,90/mês nos 6 primeiros meses, depois R$ 97/mês por condomínio. 14 dias grátis, sem cartão. Cancele quando quiser, sem fidelidade e sem multa.</p>
+        <p><strong>Preço:</strong> R$ 9,90/mês nos 3 primeiros meses, depois R$ 97/mês por condomínio. 14 dias grátis, sem cartão. Cancele quando quiser, sem fidelidade e sem multa.</p>
         {condominio.assinaturaStatus !== "ativa" && ehSindico && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {jaUsouPromo ? (
               <button className="btn" onClick={() => assinar("mensal")}>Assinar — R$ 97/mês</button>
             ) : (
-              <button className="btn" onClick={() => assinar("promocional")}>Assinar — R$ 9,90/mês (6 meses)</button>
+              <button className="btn" onClick={() => assinar("promocional")}>Assinar — R$ 9,90/mês (3 meses)</button>
             )}
           </div>
         )}

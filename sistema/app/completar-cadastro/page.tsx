@@ -201,7 +201,7 @@ export default function CompletarCadastro() {
             {carregando ? "Criando conta..." : "Criar minha conta e entrar"}
           </button>
           <p style={{ color: "#5b6b7d", marginTop: 12 }}>
-            14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 6 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.
+            14 dias grátis, sem cartão. Depois, R$ 9,90/mês nos 3 primeiros meses e R$ 97/mês. Cancele quando quiser, sem fidelidade e sem multa.
           </p>
         </form>
       )}

@@ -661,7 +661,7 @@ export default function PainelVendedor() {
         </div>
         <p style={{ color: "#0b2a4a", fontWeight: 700, margin: "4px 0 6px" }}>O que é o CondoFree?</p>
         <p style={{ color: "#5b6b7d", margin: "0 0 10px" }}>
-          Um sistema para condomínios pequenos (20 a 100 unidades) gerenciarem tudo em um link só, sem aplicativo: reserva de salão, mural de avisos, ocorrências com foto, cobranças com Pix e votação. São 14 dias grátis sem cartão, depois R$ 9,90 por mês nos primeiros 6 meses e R$ 97 por mês depois, sem fidelidade.
+          Um sistema para condomínios pequenos (20 a 100 unidades) gerenciarem tudo em um link só, sem aplicativo: reserva de salão, mural de avisos, ocorrências com foto, cobranças com Pix e votação. São 14 dias grátis sem cartão, depois R$ 9,90 por mês nos primeiros 3 meses e R$ 97 por mês depois, sem fidelidade.
         </p>
         <p style={{ color: "#0b2a4a", fontWeight: 700, margin: "4px 0 6px" }}>Como abordar (guia rápido)</p>
         <ul style={{ color: "#5b6b7d", margin: "0 0 10px", paddingLeft: 20, lineHeight: 1.6 }}>
